@@ -7,7 +7,7 @@ class Tunnel extends Beam {
   int colCenterI, colWidthI, colSpreadI, colSatI;
   int segsI, blackingI;
   
-  // scaled parameters used for drawing, set in updateBeam() method.
+  // scaled parameters used for drawing, set in updateParams() method.
   float rotSpeed, thickness, ellipseAspect;
   int radius;
   int colCenter, colWidth, colSpread, colSat;
@@ -62,7 +62,7 @@ class Tunnel extends Beam {
     
     segmentColors = new color[maxSegs];
     
-    updateBeam();
+    updateParams();
   }
   
   // tunnel constructor for a saved tunnel
@@ -101,12 +101,57 @@ class Tunnel extends Beam {
     
     segmentColors = new color[maxSegs];
     
-    updateBeam();
+    updateParams();
+  }
+  
+  // deep copy constructor
+  protected Tunnel(Tunnel original) {
+    super(original);
+    
+    type = "tunnel";
+    
+    levelI = original.levelI;
+    
+    rotSpeedI = original.rotSpeedI;
+    thicknessI = original.thicknessI;
+    radiusI = original.radiusI;
+    ellipseAspectI = original.ellipseAspectI;
+    colCenterI = original.colCenterI;
+    colWidthI = original.colWidthI;
+    colSpreadI = original.colSpreadI;
+    colSatI = original.colSatI;
+    
+    segsI = original.segsI;
+    blackingI = original.blackingI;
+
+    currAngle = original.currAngle;
+    
+    xOffset = original.xOffset;
+    yOffset = original.yOffset;
+    
+    Animation toCopy;
+    for (int i=0; i < nAnim; i++) {
+      toCopy = original.getAnimation(i);
+      theAnims[i] = toCopy.copy();
+    }
+    
+    currAnim = original.currAnim;
+    
+    segmentColors = new color[maxSegs];
+    
+    updateParams();
+    
+  }
+  
+  Tunnel copy() {
+    
+    return new Tunnel(this);
+    
   }
   
   
   // this method is called whenever a beam parameter is changed, by midi for example.  this is where parameter scaling occurs.
-  void updateBeam() {
+  void updateParams() {
     
     // update internal parameters from integer values
     level = levelI * 2;
@@ -177,7 +222,7 @@ class Tunnel extends Beam {
       
       segmentColors[segNum] = segColor;
     }
-  } // end of updateBeam()
+  } // end of updateParams()
   
   Animation getAnimation(int anim) {
     return theAnims[anim]; 

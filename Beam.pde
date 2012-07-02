@@ -10,21 +10,19 @@ class Beam {
     level = 0;
   }
   
-  /*
-  Beam clone() throws CloneNotSupportedException {
-    Beam theCopy;
-    try {
-    theCopy =  (Beam) super.clone();
-    }
-    catch (CloneNotSupportedException e) {
-      theCopy = null; // never executes.
-    }
-    
-    return theCopy;
+  // constructor used for copying
+  protected Beam(Beam original) {
+    type = original.type;
+    levelI = original.levelI;
+    level = original.level;
   }
-  */
   
-  void updateBeam() {
+  // copy method
+  Beam copy() {
+    return new Beam(this);
+  }
+  
+  void updateParams() {
   }
   
   void display() {

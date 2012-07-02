@@ -43,6 +43,23 @@ class Animation {
     updateParams();
   }
   
+  // object copying:
+  protected Animation(Animation original) {
+    typeI = original.typeI;
+    speedI = original.speedI;
+    weightI = original.weightI;
+    targetI = original.targetI;
+    
+    currAngle = original.currAngle;
+    
+    updateParams();
+  }
+  
+  Animation copy() {
+    return new Animation(this);
+    
+  }
+  
   // method to update the scaled parameters when midi values change/etc.
   void updateParams() {
    

@@ -71,6 +71,7 @@ void setup() {
   strokeCap(SQUARE);
   
   frameRate(30);
+  frameNumber = 0;
   
   colorMode(HSB);
   
@@ -115,9 +116,9 @@ void setup() {
       
       //thisTunnel.rotSpeedI = 72;
       thisTunnel.ellipseAspectI = 64;
-      thisTunnel.colWidthI = 127;
+      thisTunnel.colWidthI = 32;
       thisTunnel.colSpreadI = 127;
-      thisTunnel.colSatI = 0;
+      thisTunnel.colSatI = 32;
       
       thisTunnel.thicknessI = 40;
       thisTunnel.radiusI = 64-i*4;
@@ -159,10 +160,25 @@ void setup() {
       anim3.updateParams();
       
       
-      thisTunnel.updateBeam();
+      thisTunnel.updateParams();
     }
   }
   
+  
+  // copy testing
+  Tunnel toCopy = (Tunnel) theBeams.get(0);
+  Tunnel theCopy = toCopy.copy();
+  
+  theCopy.ellipseAspectI = 127;
+  
+  Animation copyTest = theCopy.getAnimation(1);
+  copyTest.speedI = 64;
+  
+  copyTest.updateParams();
+  
+  theCopy.updateParams();
+  
+  theBeams.set(1,theCopy);
 }
 
 
@@ -173,7 +189,7 @@ void draw() {
   // black out everything to remove leftover pixels
   background(0);
   
-  Beam drawMe;
+  Beam drawMe = null;
   
   // loop over the beams and draw them. beam 0 is on the bottom.
   for(int i=0; i<theBeams.size(); i++) {
@@ -181,6 +197,16 @@ void draw() {
     drawMe = (Beam) theBeams.get(i);
     drawMe.display();
   }
+  
+  /*
+  // deep copy testing
+  if (frameNumber % 1 == 0) {
+    Tunnel toCopy = (Tunnel) theBeams.get(0);
+    Tunnel theCopy = toCopy.copy();
+    theBeams.set(0, theCopy);
+  }
+  */
+
   
   // println(frameRate);
 }
@@ -289,7 +315,7 @@ void midiInputHandler(int beamNum, boolean chanChange, boolean isNote, int num, 
     }
 
     // call the update method
-    thisBeam.updateBeam();
+    thisBeam.updateParams();
     
   }
 }
