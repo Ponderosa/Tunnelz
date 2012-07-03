@@ -322,23 +322,28 @@ class Tunnel extends Beam {
       switch(num) {
         case 0x57: //anim 0
           currAnim = 0;
-          updateTopKnobState(this);
+          updateKnobState(this);
+          setAnimSelectLED(0);
           break;
         case 0x58: //anim 1
           currAnim = 1;
-          updateTopKnobState(this);
+          updateKnobState(this);
+          setAnimSelectLED(1);
           break;
         case 0x59: //anim 2
           currAnim = 2;
-          updateTopKnobState(this);
+          updateKnobState(this);
+          setAnimSelectLED(2);
           break;
         case 0x5A: //anim 3
           currAnim = 3;
-          updateTopKnobState(this);
+          updateKnobState(this);
+          setAnimSelectLED(3);
           break;
       }
       
     }
+    
     else { // this is a control change
       switch(num) {
         // color parameters: top of lower bank
@@ -403,9 +408,75 @@ class Tunnel extends Beam {
         // */
         
       } // end of switch
+      
     }
     
   } // end up update midi param method
   
+  // method to get the midi-scaled value for a control parameter
+  int getMIDIParam(boolean isNote, int num) {
+    int theVal = 0;
+    
+    if (!isNote) {
+      switch(num) {
+        case 16: // color center
+          theVal = colCenterI;
+          break;
+        case 17: // color width
+          theVal = colWidthI;
+          break;
+        case 18: // color spread
+          theVal = colSpreadI;
+          break;    
+        case 19: // saturation
+          theVal = colSatI;
+          break;
+          
+        // geometry parameters: bottom of lower bank
+        case 20: // rotation speed
+          theVal = rotSpeedI;
+          break; 
+        case 21: // thickness
+          theVal = thicknessI;
+          break;
+        case 22: // radius
+          theVal = radiusI;
+          break;
+        case 23: // ellipse aspect ratio
+          theVal = ellipseAspectI;
+          break;
+          
+        // segments parameters: bottom of upper bank
+          
+        case 52: // number of segments
+          theVal = segsI;
+          break;  
+        case 53: // blacking
+          theVal = blackingI;
+          break;
+          
+        // animation parameters: top of upper bank
+        // /* fix this code
+        case 48:
+          thisAnim = getAnimation(currAnim);
+          theVal = thisAnim.typeI;
+          break;
+        case 49:
+          thisAnim = getAnimation(currAnim);
+          theVal = thisAnim.weightI;
+          break;
+        case 50:
+          thisAnim = getAnimation(currAnim);
+          theVal = thisAnim.speedI;
+          break;
+        case 51:
+          thisAnim = getAnimation(currAnim);
+          theVal = thisAnim.targetI;
+          break;
+      }
+    }
+    
+    return theVal;
+  } // end of getMIDIParam method
   
 } // end of Tunnel class

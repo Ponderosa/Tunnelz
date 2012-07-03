@@ -339,7 +339,7 @@ void midiInputHandler(int layerNum, boolean chanChange, boolean isNote, int num,
         if (animClipboard.hasData) {
           thisBeam.replaceCurrentAnimation( animClipboard.paste() );
           thisBeam.updateParams();
-          updateTopKnobState(thisBeam);
+          updateKnobState(thisBeam);
         }
       }
       
@@ -355,9 +355,10 @@ void midiInputHandler(int layerNum, boolean chanChange, boolean isNote, int num,
       
         // update knob state if we've changed channel
         if (chanChange) {
-          updateTopKnobState(thisBeam);
+          updateKnobState(thisBeam);
           setBottomLEDRings(mixer.currentLayer, thisBeam);
           setTopLEDRings(thisBeam);
+          setAnimSelectLED(thisBeam.currAnim);
         }
     
         // call the update method
@@ -367,61 +368,7 @@ void midiInputHandler(int layerNum, boolean chanChange, boolean isNote, int num,
   }
 }
 
-// method to update the state of the top control knobs when we change channels
-void updateTopKnobState(Beam theBeam) {
-  
-  String beamType = theBeam.type;
-  
-  // for tunnel type
-  if(beamType.equals("tunnel")) {
-    Tunnel theTunnel = (Tunnel) theBeam;
-    
-    // update the top knobs
-    sendCC(0, 52, theTunnel.segsI);
-    sendCC(0, 53, theTunnel.blackingI);
-    
-    Animation thisAnim = theTunnel.getCurrentAnimation();
-    
-    sendCC(0, 48, thisAnim.typeI);
-    sendCC(0, 49, thisAnim.weightI);
-    sendCC(0, 50, thisAnim.speedI);
-    sendCC(0, 51, thisAnim.targetI);
-    
-  }
-  
-}
 
-// method to set the bottom LED ring values
-void setBottomLEDRings(int channel, Beam thisBeam) {
-  String beamType = thisBeam.type;
-  if (beamType.equals("tunnel")) {
-    sendCC(channel, 0x18, 1);
-    sendCC(channel, 0x19, 1);
-    sendCC(channel, 0x1A, 2);
-    sendCC(channel, 0x1B, 2);
-  
-    sendCC(channel, 0x1C, 3);
-    sendCC(channel, 0x1D, 2);
-    sendCC(channel, 0x1E, 2);
-    sendCC(channel, 0x1F, 1);
-  }
-}
-
-// set the top LED ring values
-void setTopLEDRings(Beam thisBeam) {
-  
-  String beamType = thisBeam.type;
-  if (beamType.equals("tunnel")) {
-  
-    sendCC(0, 0x38, 1);
-    sendCC(0, 0x39, 2);
-    sendCC(0, 0x3A, 3);
-    sendCC(0, 0x3B, 1);
-    
-    sendCC(0, 0x3C, 2);
-    sendCC(0, 0x3D, 1);
-  }
-}
 
 // method to unwrap angles
 float unwrap(float theAngle) {
@@ -444,9 +391,9 @@ void sendCC(int channel, int number, int val) {
 }
 
 // wrapper method for sending midi notes, because we don't care about most parameters
-void sendNote(int channel, int number) {
+void sendNote(int channel, int number, int velocity) {
   if (channel < nMidiOut) {
-    midiOuts[channel].sendNote(new Note(number, 127, 20));
+    midiOuts[channel].sendNote(new Note(number, velocity, 100));
   } 
 }
 
@@ -455,11 +402,19 @@ void sendNote(int channel, int number) {
 // as of yet unused midi methods
 
 void noteOff(Note note, int device, int channel) {
-  int pit = note.getPitch();
+  int num = note.getPitch();
+  int vel = note.getVelocity();
 
-  // println("note off");
-  // print("pitch    = ");
-  // println(pit);
+  
+  if (midiDebug) {
+    println("note off");
+    print("channel  = ");
+    println(channel);
+    print("pitch    = ");
+    println(num);
+    print("velocity = ");
+    println(vel);
+  }
 }
 
 

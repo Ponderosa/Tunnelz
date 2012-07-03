@@ -2,6 +2,7 @@
 class Beam {
   
   String type;
+  int currAnim = 0;
   
   Beam() {
     type = "generic";
@@ -36,5 +37,9 @@ class Beam {
   
   void setMIDIParam(boolean isNote, int num, int val) {
     
+  }
+  
+  int getMIDIParam(boolean isNote, int num) {
+    return 0;
   }
 } // end of Beam class
