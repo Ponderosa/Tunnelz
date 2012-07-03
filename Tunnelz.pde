@@ -165,20 +165,21 @@ void setup() {
   }
   
   
-  // copy testing
+  // BeamVault testing
+  BeamVault theVault = new BeamVault(1);
   Tunnel toCopy = (Tunnel) theBeams.get(0);
-  Tunnel theCopy = toCopy.copy();
+  theVault.storeCopy(0, toCopy);
   
-  theCopy.ellipseAspectI = 127;
+  toCopy.ellipseAspectI = 127;
   
-  Animation copyTest = theCopy.getAnimation(1);
+  Animation copyTest = toCopy.getAnimation(1);
   copyTest.speedI = 64;
   
   copyTest.updateParams();
   
-  theCopy.updateParams();
+  toCopy.updateParams();
   
-  theBeams.set(1,theCopy);
+  theBeams.set(1,theVault.retrieveCopy(0));
 }
 
 
