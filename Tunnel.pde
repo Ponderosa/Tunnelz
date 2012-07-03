@@ -34,7 +34,6 @@ class Tunnel extends Beam {
   Tunnel() {
     type = "tunnel";
     
-    levelI = 0;
     
     rotSpeedI = 64;
     thicknessI = 32;
@@ -66,15 +65,13 @@ class Tunnel extends Beam {
   }
   
   // tunnel constructor for a saved tunnel
-  Tunnel(int theLevelI,
-         int theRotSpeedI, int theThicknessI, int theRadiusI, int theEllipseAspectI,
+  Tunnel(int theRotSpeedI, int theThicknessI, int theRadiusI, int theEllipseAspectI,
          int thecolCenterI, int thecolWidthI, int theColSpreadI, int theColSatI,
          int theSegsI, int theBlackingI,
          int theXOffset, int theYOffset) {
            
     type = "tunnel";
     
-    levelI = theLevelI;
     
     rotSpeedI = theRotSpeedI;
     thicknessI = theThicknessI;
@@ -109,8 +106,6 @@ class Tunnel extends Beam {
     super(original);
     
     type = "tunnel";
-    
-    levelI = original.levelI;
     
     rotSpeedI = original.rotSpeedI;
     thicknessI = original.thicknessI;
@@ -154,7 +149,6 @@ class Tunnel extends Beam {
   void updateParams() {
     
     // update internal parameters from integer values
-    level = levelI * 2;
     
     if (65 < rotSpeedI)
       rotSpeed = (float)(rotSpeedI-65)/rotSpeedScale;
@@ -205,19 +199,11 @@ class Tunnel extends Beam {
         while (theHue < 0)
           theHue = theHue + 255;
         
-        segColor = color(theHue, colSat, level);
-        
-        /*
-        // blend the selected color with the saturation parameter
-        segColor = blendColor(colPallete[colPnt], satColor, ADD);
-        
-        // multiply by the level
-        segColor = blendColor(segColor, levelColor, MULTIPLY);
-        */
+        segColor = color(theHue, colSat, 255);
       }
       // otherwise this is a blacked segment.
       else {
-        segColor = color(0,0,0);
+        segColor = color(0);
       }
       
       segmentColors[segNum] = segColor;
@@ -231,6 +217,91 @@ class Tunnel extends Beam {
   Animation getCurrentAnimation() {
     return theAnims[currAnim];
   }
+  
+  // method that draws the beam
+  void display(int level) {
+    
+    // calulcate the rotation
+    currAngle = currAngle + rotSpeed;
+    
+        
+    // unwrap angle so it stays in the range -pi to pi
+    currAngle = unwrap(currAngle);
+    
+    // update the state of the animations
+    for (int animIt=0; animIt < nAnim; animIt++) {
+      theAnims[animIt].updateState();
+    }
+    
+    float tunnelRadX = (radius*ellipseAspect) - thickness/2;
+    float tunnelRadY = radius - thickness/2;
+
+    noFill();
+    strokeWeight(thickness);
+
+    // loop over segments and draw arcs
+    for (int i = 0; i < segs; i++) {
+
+      // only draw something if the segment color isn't black.
+      if(color(0) != segmentColors[i]) {
+        stroke( blendColor(segmentColors[i], color(0,0,level), MULTIPLY) );
+        // stroke( segmentColors[i] );
+      }
+      else {
+        noStroke();
+      }
+      
+      drawSegmentWithAnimation(tunnelRadX, tunnelRadY, i);
+
+    } // end of loop over segments
+  }
+  
+  // method that actually draws a tunnel segment given animation parameters
+  void drawSegmentWithAnimation(float radX, float radY, int segNum) {
+      
+      // parameters that animation may modify
+      float radAdjust = 0;
+      float thicknessAdjust = 0;
+      int xAdjust = 0;
+      int yAdjust = 0;
+      
+      // the angle of this particular segment
+      float segAngle = rotInterval*segNum+currAngle;
+      float relAngle = rotInterval*segNum;
+      
+      Animation thisAnim;
+      int thisTarget;
+      
+      // loop over animations
+      for (int animIt = 0; animIt < nAnim; animIt++) {
+      
+        thisAnim = theAnims[animIt];
+        thisTarget = thisAnim.target;
+        
+        // what is this animation targeting?
+        switch (thisTarget) {
+          case 0: // radius
+            radAdjust += thisAnim.getValue(relAngle);
+            break;
+          case 1: // thickness
+            thicknessAdjust += thisAnim.getValue(relAngle);
+            break;
+          case 2: // x offset
+            xAdjust += thisAnim.getValue(0)*(width/2)/127;
+            break;
+          case 3: // y offset
+            yAdjust += thisAnim.getValue(0)*(height/2)/127;
+            break;
+        } // end of target switch
+      } // end of animations loop
+
+      strokeWeight(thickness*(1 + thicknessAdjust/127));  
+    
+      // draw pie wedge for this cell
+      arc(x_center+xOffset+xAdjust, y_center+yOffset+yAdjust, radX+radAdjust, radY+radAdjust, 
+      segAngle, segAngle + rotInterval);
+  } 
+  
   
   // function to set the control parameter based on passed midi value
   void setMIDIParam(boolean isNote, int num, int val) {
@@ -259,12 +330,7 @@ class Tunnel extends Beam {
       
     }
     else { // this is a control change
-      switch(num) {    
-        // upfader
-        case 7: // level - essentially inverse transparency
-          levelI = val;
-          break;
-    
+      switch(num) {
         // color parameters: top of lower bank
         case 16: // color center
           colCenterI = val;
@@ -329,88 +395,7 @@ class Tunnel extends Beam {
       } // end of switch
     }
     
-  }
+  } // end up update midi param method
   
-  // method that draws the beam
-  void display() {
-    
-    // calulcate the rotation
-    currAngle = currAngle + rotSpeed;
-    
-        
-    // unwrap angle so it stays in the range -pi to pi
-    currAngle = unwrap(currAngle);
-    
-    // update the state of the animations
-    for (int animIt=0; animIt < nAnim; animIt++) {
-      theAnims[animIt].updateState();
-    }
-    
-    float tunnelRadX = (radius*ellipseAspect) - thickness/2;
-    float tunnelRadY = radius - thickness/2;
-
-    noFill();
-    strokeWeight(thickness);
-
-    // loop over segments and draw arcs
-    for (int i = 0; i < segs; i++) {
-
-      // only draw something if the segment color isn't black.
-      if(color(0) != segmentColors[i]) {
-        stroke(segmentColors[i]);
-      }
-      else {
-        noStroke();
-      }
-      
-      drawSegmentWithAnimation(tunnelRadX, tunnelRadY, i);
-
-    } // end of loop over segments
-  }
   
-  // method that actually draws a tunnel segment given animation parameters
-  void drawSegmentWithAnimation(float radX, float radY, int segNum) {
-      
-      // parameters that animation may modify
-      float radAdjust = 0;
-      float thicknessAdjust = 0;
-      int xAdjust = 0;
-      int yAdjust = 0;
-      
-      // the angle of this particular segment
-      float segAngle = rotInterval*segNum+currAngle;
-      float relAngle = rotInterval*segNum;
-      
-      Animation thisAnim;
-      int thisTarget;
-      
-      // loop over animations
-      for (int animIt = 0; animIt < nAnim; animIt++) {
-      
-        thisAnim = theAnims[animIt];
-        thisTarget = thisAnim.target;
-        
-        // what is this animation targeting?
-        switch (thisTarget) {
-          case 0: // radius
-            radAdjust += thisAnim.getValue(relAngle);
-            break;
-          case 1: // thickness
-            thicknessAdjust += thisAnim.getValue(relAngle);
-            break;
-          case 2: // x offset
-            xAdjust += thisAnim.getValue(0)*(width/2)/127;
-            break;
-          case 3: // y offset
-            yAdjust += thisAnim.getValue(0)*(height/2)/127;
-            break;
-        } // end of target switch
-      } // end of animations loop
-
-      strokeWeight(thickness*(1 + thicknessAdjust/127));  
-    
-      // draw pie wedge for this cell
-      arc(x_center+xOffset+xAdjust, y_center+yOffset+yAdjust, radX+radAdjust, radY+radAdjust, 
-      segAngle, segAngle + rotInterval);
-  } 
 } // end of Tunnel class

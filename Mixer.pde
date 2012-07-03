@@ -2,29 +2,50 @@
 // class that holds a collection of beams in layers, and understands how they are mixed.
 class Mixer {
   
-  int nBeams;
-  ArrayList theBeams;
-  int[] levels;
+  private int nLayers;
+  private ArrayList theLayers;
+  private int[] levels;
   
   // generic constructor
   Mixer() {
     
-    nBeams = 1;
-    theBeams = new ArrayList(nBeams);
+    nLayers = 1;
+    theLayers = new ArrayList(nLayers);
     levels = new int[] {0};
     
   }
   
   // simple constructor for all defaults
-  Mixer(int nBeams) {
+  Mixer(int nLayers) {
   
-    this.nBeams = nBeams;
-    theBeams = new ArrayList(nBeams);
+    this.nLayers = nLayers;
+    theLayers = new ArrayList(nLayers);
+    levels = new int[nLayers];
     
-    for (int i = 0; i < nBeams; i++) {
+    for (int i = 0; i < nLayers; i++) {
+      theLayers.add(null);
       levels[i] = 0;
     }
    
+  }
+  
+  // method to put a beam in a layer
+  void putBeamInLayer(int layer, Beam theBeam) {
+    theLayers.set(layer, theBeam);
+  }
+  
+  // method to get a beam from a layer
+  Beam getBeamFromLayer(int layer) {
+    return (Beam) theLayers.get(layer);
+  }
+  
+  void setLevel(int layer, int level) {
+    levels[layer] = level; 
+  }
+  
+  // returns the number of layers
+  int nLayers() {
+    return nLayers;
   }
   
   // method to draw all the layers
@@ -32,10 +53,10 @@ class Mixer {
     Beam drawMe;
   
     // loop over the beams and draw them.
-    for(int i=0; i<nBeams; i++) {
+    for(int i=0; i<nLayers; i++) {
     
-      drawMe = (Beam) theBeams.get(i);
-      drawMe.display();
+      drawMe = getBeamFromLayer(i);
+      drawMe.display(levels[i]);
       
     }
   }

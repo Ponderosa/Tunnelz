@@ -17,9 +17,9 @@ boolean useMidi = false;
 boolean midiDebug = false;
 
 
-// array of beam control channels
+// the beam mixer
 int nBeams = 2;
-ArrayList theBeams = new ArrayList(nBeams);
+Mixer mixer = new Mixer(nBeams);
 
 
 int frameNumber;
@@ -54,6 +54,8 @@ color[] colPallete = new color[colPalleteSize];
 
 
 void setup() {
+  
+  // processing-specific setup
   if (useOpenGL) {
     size(x_size, y_size, OPENGL);
     //hint(DISABLE_OPENGL_2X_SMOOTH);
@@ -62,7 +64,6 @@ void setup() {
     size(x_size,y_size);
   }
 
-  screenAspect = float(x_size)/float(y_size);
   background(0); //black
   //smooth(); // anti-aliasing is SLOW
   
@@ -75,13 +76,15 @@ void setup() {
   
   colorMode(HSB);
   
-  // fill the color pallete
-  //fillPallete();
-
+  // geometry
+  screenAspect = float(width)/float(height);
+  
   maxRadius = min(width, height)/2;
   
-  x_center = x_size/2;
-  y_center = y_size/2;
+  x_center = width/2;
+  y_center = height/2;
+  
+  
 
   //get an instance of MidiIO
   midiIO = MidiIO.getInstance(this);
@@ -106,13 +109,14 @@ void setup() {
     
     }
     
-    theBeams.add(i, new Tunnel());
+    mixer.putBeamInLayer(i, new Tunnel());
     
     // can change defaults as the list is propagated here:
     if ( !useMidi) {
-      Tunnel thisTunnel = (Tunnel) theBeams.get(i);
+      mixer.setLevel(i,255);
       
-      thisTunnel.levelI = 127;
+      Tunnel thisTunnel = (Tunnel) mixer.getBeamFromLayer(i);
+      
       
       //thisTunnel.rotSpeedI = 72;
       thisTunnel.ellipseAspectI = 64;
@@ -165,21 +169,6 @@ void setup() {
   }
   
   
-  // BeamVault testing
-  BeamVault theVault = new BeamVault(1);
-  Tunnel toCopy = (Tunnel) theBeams.get(0);
-  theVault.storeCopy(0, toCopy);
-  
-  toCopy.ellipseAspectI = 127;
-  
-  Animation copyTest = toCopy.getAnimation(1);
-  copyTest.speedI = 64;
-  
-  copyTest.updateParams();
-  
-  toCopy.updateParams();
-  
-  theBeams.set(1,theVault.retrieveCopy(0));
 }
 
 
@@ -190,14 +179,7 @@ void draw() {
   // black out everything to remove leftover pixels
   background(0);
   
-  Beam drawMe = null;
-  
-  // loop over the beams and draw them. beam 0 is on the bottom.
-  for(int i=0; i<theBeams.size(); i++) {
-    
-    drawMe = (Beam) theBeams.get(i);
-    drawMe.display();
-  }
+  mixer.drawLayers();
   
   /*
   // deep copy testing
@@ -207,9 +189,8 @@ void draw() {
     theBeams.set(0, theCopy);
   }
   */
-
   
-  // println(frameRate);
+  println(frameRate);
 }
 
 
@@ -299,12 +280,12 @@ boolean isNoteCh0Only(int num) {
 }
 
 // method called once the CC and noteOn methods have parsed and formatted data.
-void midiInputHandler(int beamNum, boolean chanChange, boolean isNote, int num, int val) {
+void midiInputHandler(int layerNum, boolean chanChange, boolean isNote, int num, int val) {
     // ensure we don't retrieve null beams
-  if (beamNum < nBeams) {
+  if (layerNum < nBeams) {
     
     // get the appropriate beam
-    Beam thisBeam = (Beam) theBeams.get(beamNum);
+    Beam thisBeam = mixer.getBeamFromLayer(layerNum);
 
     thisBeam.setMIDIParam(isNote, num, val);
   

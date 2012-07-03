@@ -2,19 +2,14 @@
 class Beam {
   
   String type;
-  int levelI, level;
   
   Beam() {
     type = "generic";
-    levelI = 0;
-    level = 0;
   }
   
   // constructor used for copying
   protected Beam(Beam original) {
     type = original.type;
-    levelI = original.levelI;
-    level = original.level;
   }
   
   // copy method
@@ -25,7 +20,7 @@ class Beam {
   void updateParams() {
   }
   
-  void display() {
+  void display(int level) {
   }
   
   Animation getAnimation(int theAnim) {
