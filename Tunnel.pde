@@ -210,13 +210,23 @@ class Tunnel extends Beam {
     }
   } // end of updateParams()
   
+  
+  // get any animation
   Animation getAnimation(int anim) {
     return theAnims[anim]; 
   }
   
+  // get the currently selected animation
   Animation getCurrentAnimation() {
-    return theAnims[currAnim];
+    return getAnimation(currAnim);
   }
+  
+  // replace the currently selected animation
+  void replaceCurrentAnimation(Animation newAnim) {
+    theAnims[currAnim] = newAnim;
+    
+  }
+  
   
   // method that draws the beam
   void display(int level) {
@@ -295,10 +305,10 @@ class Tunnel extends Beam {
         } // end of target switch
       } // end of animations loop
 
-      strokeWeight(thickness*(1 + thicknessAdjust/127));  
+      strokeWeight( abs(thickness*(1 + thicknessAdjust/127)) );  // the abs() is there to prevent negative width setting when using multiple animations.
     
       // draw pie wedge for this cell
-      arc(x_center+xOffset+xAdjust, y_center+yOffset+yAdjust, radX+radAdjust, radY+radAdjust, 
+      arc(x_center+xOffset+xAdjust, y_center+yOffset+yAdjust, abs(radX+radAdjust), abs(radY+radAdjust),
       segAngle, segAngle + rotInterval);
   } 
   

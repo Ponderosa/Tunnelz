@@ -10,16 +10,22 @@ MidiIO midiIO;
 int nMidiOut = 9;
 MidiOut[] midiOuts = new MidiOut[nMidiOut];
 
-int lastChannel; // for hacking around the knob limitations
 int APCDeviceNum = 0;
 
-boolean useMidi = false;
-boolean midiDebug = false;
+boolean useMidi = true;
+boolean midiDebug = true;
 
 
 // the beam mixer
-int nBeams = 2;
+int nBeams = 8;
 Mixer mixer = new Mixer(nBeams);
+
+
+// beam state storage
+BeamVault buttonsVault = new BeamVault(40);
+
+// Animation clipboard
+AnimationClipboard animClipboard = new AnimationClipboard();
 
 
 int frameNumber;
@@ -100,8 +106,8 @@ void setup() {
     } 
   }
 
-  // open midi channels for each beam and fill the array of beams; for now all tunnels.
-  for(int i = 0; i < nBeams; i++) {
+  // open midi channels for each mixer channel and fill the mixer; for now all tunnels.
+  for(int i = 0; i < mixer.nLayers(); i++) {
     
     // open midi input for this beam
     if (useMidi) {
@@ -190,7 +196,7 @@ void draw() {
   }
   */
   
-  println(frameRate);
+  // println(frameRate);
 }
 
 
@@ -204,14 +210,14 @@ void controllerIn(Controller controller, int device, int channel) {
   boolean isCh0Only = isControlCh0Only(num);
   
   // if the control didn't come from an APC channel 0 only control and we seem to have switched channels
-  if ( !isCh0Only  && (channel != lastChannel) ) {
-    lastChannel = channel;
+  if ( !isCh0Only  && (channel != mixer.currentLayer) ) {
+    mixer.currentLayer = channel;
     channelChange = true;
   }
   
   // if the control came from a top knob, interpret correctly
   if ( isCh0Only ) {
-    channel = lastChannel;
+    channel = mixer.currentLayer;
   }
   
   midiInputHandler(channel, channelChange, false, num, val);
@@ -238,27 +244,51 @@ boolean isControlCh0Only(int num) {
 
 void noteOn(Note note, int device, int channel) {
 
+  // cases: note came from a button: has velocity = 127
+  // note came from a stupid CC as note bug, has velocity = 0
+  
   int num = note.getPitch();
+  int vel = note.getVelocity();
   
   boolean channelChange = false;
-  boolean isCh0Only = isNoteCh0Only(num);
   
-  // if the note didn't come from a ch0 only button and we seem to have switched channels
-  if ( !isCh0Only && (channel != lastChannel) ) {
-    lastChannel = channel;
-    channelChange = true;
-  }
+  boolean isCh0Only;
   
-  // if the note came from a ch0 only button, interpret correctly
-  if ( isCh0Only ) {
-    channel = lastChannel;
-  }
+  // if the note came from a button
+  if ( vel > 0 ) {
+    
+    isCh0Only = isNoteCh0Only(num);
+    
+    // if the note didn't come from a ch0 only button and we seem to have switched channels
+    if ( !isCh0Only && (channel != mixer.currentLayer) ) {
+      mixer.currentLayer = channel;
+      channelChange = true;
+    }
   
-  if (7 == num || (num >= 0x30 && num <= 0x37) ) {
-    midiInputHandler(channel, channelChange, false, num, 0);
-  }
-  else {
+    // if the note came from a ch0 only button, interpret correctly
+    if ( isCh0Only ) {
+      channel = mixer.currentLayer;
+    }
+    
     midiInputHandler(channel, channelChange, true, num, 0);
+  }
+  
+  // if velocity is 0, ie, CC as note bug
+  else {
+    isCh0Only = ( num >= 0x30 && num <= 0x37 );
+    
+    // if the note didn't come from a ch0 only button and we seem to have switched channels
+    if ( !isCh0Only && (channel != mixer.currentLayer) ) {
+      mixer.currentLayer = channel;
+      channelChange = true;
+    }
+  
+    // if the note came from a ch0 only button, interpret correctly
+    if ( isCh0Only ) {
+      channel = mixer.currentLayer;
+    }
+    
+    midiInputHandler(channel, channelChange, false, num, 0);
   }
   
 
@@ -268,13 +298,15 @@ void noteOn(Note note, int device, int channel) {
     println(channel);
     print("pitch    = ");
     println(num);
+    print("velocity = ");
+    println(vel);
   }
 }
 
 
 
 boolean isNoteCh0Only(int num) {
-  if ( (num >= 0x50 && num <= 0x65) || (num >= 0x30 && num <= 0x37) ) // thanks APC40 programmers for this simple range!  hacked in range of top knobs.
+  if ( num >= 0x50 && num <= 0x65 ) // thanks APC40 programmers for this simple range!
     return true;
   else return false;
 }
@@ -282,23 +314,56 @@ boolean isNoteCh0Only(int num) {
 // method called once the CC and noteOn methods have parsed and formatted data.
 void midiInputHandler(int layerNum, boolean chanChange, boolean isNote, int num, int val) {
     // ensure we don't retrieve null beams
-  if (layerNum < nBeams) {
+  if (layerNum < mixer.nLayers() ) {
     
-    // get the appropriate beam
-    Beam thisBeam = mixer.getBeamFromLayer(layerNum);
-
-    thisBeam.setMIDIParam(isNote, num, val);
-  
-    // update knob state if we've changed channel
-    if (chanChange) {
-      updateTopKnobState(thisBeam);
-      setBottomLEDRings(lastChannel, thisBeam);
-      setTopLEDRings(thisBeam);
+    // if the control is an upfader
+    if (0x07 == num) {
+      // special cases to allow scaling to 255
+      if (0 == val) {
+        mixer.setLevel(layerNum, 0);
+      }
+      else {
+        mixer.setLevel(layerNum, 2*val + 1);
+      }
     }
-
-    // call the update method
-    thisBeam.updateParams();
     
+    // if not an upfader
+    else {
+    
+      // get the appropriate beam
+      Beam thisBeam = mixer.getBeamFromLayer(layerNum);
+      
+      // if nudge+: animation paste
+      if (0x64 == num) {
+        // ensure we don't paste null
+        if (animClipboard.hasData) {
+          thisBeam.replaceCurrentAnimation( animClipboard.paste() );
+          thisBeam.updateParams();
+          updateTopKnobState(thisBeam);
+        }
+      }
+      
+      // if nudge-: animation copy
+      if (0x65 == num) {
+        animClipboard.copy( thisBeam.getCurrentAnimation() );
+      }
+      
+      // if beam-specific parameter:
+      else {
+      
+        thisBeam.setMIDIParam(isNote, num, val);
+      
+        // update knob state if we've changed channel
+        if (chanChange) {
+          updateTopKnobState(thisBeam);
+          setBottomLEDRings(mixer.currentLayer, thisBeam);
+          setTopLEDRings(thisBeam);
+        }
+    
+        // call the update method
+        thisBeam.updateParams();
+      }
+    } 
   }
 }
 
@@ -396,6 +461,7 @@ void noteOff(Note note, int device, int channel) {
   // print("pitch    = ");
   // println(pit);
 }
+
 
 void programChange(ProgramChange programChange, int device, int channel) {
   int num = programChange.getNumber();

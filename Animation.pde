@@ -85,9 +85,9 @@ class Animation {
     }
    
     if (65 < speedI)
-      speed = (float)(speedI-65)/speedScale;
+      speed = -(float)(speedI-65)/speedScale;
     else if (63 > speedI)
-      speed = -(float)(-speedI+63)/speedScale;
+      speed = (float)(-speedI+63)/speedScale;
     else
       speed = 0;
     

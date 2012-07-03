@@ -27,6 +27,13 @@ class Beam {
     return null; 
   }
   
+  Animation getCurrentAnimation() {
+    return null;
+  }
+  
+  void replaceCurrentAnimation(Animation newAnim) {
+  }
+  
   void setMIDIParam(boolean isNote, int num, int val) {
     
   }

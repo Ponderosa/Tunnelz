@@ -5,6 +5,7 @@ class Mixer {
   private int nLayers;
   private ArrayList theLayers;
   private int[] levels;
+  int currentLayer;
   
   // generic constructor
   Mixer() {
@@ -54,9 +55,12 @@ class Mixer {
   
     // loop over the beams and draw them.
     for(int i=0; i<nLayers; i++) {
-    
-      drawMe = getBeamFromLayer(i);
-      drawMe.display(levels[i]);
+      
+      // don't draw beams that are all the way off
+      if (levels[i] > 0) {
+        drawMe = getBeamFromLayer(i);
+        drawMe.display(levels[i]);
+      }
       
     }
   }
