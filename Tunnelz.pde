@@ -12,7 +12,7 @@ MidiOut[] midiOuts = new MidiOut[nMidiOut];
 
 int APCDeviceNum = 0;
 
-boolean useMidi = true;
+boolean useMidi = false;
 boolean midiDebug = true;
 
 

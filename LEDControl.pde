@@ -8,9 +8,9 @@ void updateKnobState(Beam theBeam) {
                               48, 49, 50, 51,
                               52, 53, 54, 55};
   
-  for(int i=0; i<knobNums.size(); i++) {
+  for(int i=0; i<knobNums.length; i++) {
     
-    sendCC(0, knobNums[i], theBeam.getMIDIParam(knobNums[i]));
+    sendCC(0, knobNums[i], theBeam.getMIDIParam(false, knobNums[i]));
     
   }
   
@@ -18,6 +18,8 @@ void updateKnobState(Beam theBeam) {
 
 // method to set the bottom LED ring values
 void setBottomLEDRings(int channel, Beam thisBeam) {
+  
+  String beamType = thisBeam.type;
   
   if (beamType.equals("tunnel")) {
     sendCC(channel, 0x18, 1);

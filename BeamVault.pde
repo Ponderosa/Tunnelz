@@ -19,9 +19,37 @@ class BeamVault {
     }
   }
   
+  // initialize a BeamVault with a single beam
+  BeamVault(Beam theBeam) {
+    theBeams = new ArrayList(1);
+    storeCopy(0, theBeam);
+  }
+  
+  // initialize a BeamVault with a collection of beams
+  BeamVault(ArrayList theBeamArray) {
+    int nBeams = theBeamArray.size();
+    theBeams = new ArrayList(nBeams);
+    
+    
+    Beam toCopy;
+    
+    for (int i=0; i< nBeams; i++) {
+      toCopy = (Beam) theBeamArray.get(i);
+      theBeams.add(toCopy.copy());
+    }
+  }
+  
   // copying constructor
   protected BeamVault(BeamVault original) {
-    theBeams = new ArrayList(original.theBeams);
+    int nBeams = original.theBeams.size();
+    theBeams = new ArrayList(nBeams);
+    
+    Beam toCopy;
+    
+    for (int i=0; i< nBeams; i++) {
+      toCopy = (Beam) original.theBeams.get(i);
+      theBeams.add(toCopy.copy());
+    }
   }
   
   // deep copy method

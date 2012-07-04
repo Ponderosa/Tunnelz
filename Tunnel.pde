@@ -417,6 +417,8 @@ class Tunnel extends Beam {
   int getMIDIParam(boolean isNote, int num) {
     int theVal = 0;
     
+    Animation thisAnim;
+    
     if (!isNote) {
       switch(num) {
         case 16: // color center
