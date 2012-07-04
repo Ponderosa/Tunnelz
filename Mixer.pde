@@ -40,6 +40,16 @@ class Mixer {
     return (Beam) theLayers.get(layer);
   }
   
+  // method to get the current beam
+  Beam getCurrentBeam() {
+    return (Beam) theLayers.get(currentLayer); 
+  }
+  
+  // method to set the current beam
+  void setCurrentBeam(Beam theBeam) {
+    putBeamInLayer(currentLayer, theBeam);
+  }
+  
   void setLevel(int layer, int level) {
     levels[layer] = level; 
   }
@@ -63,6 +73,29 @@ class Mixer {
       }
       
     }
+  }
+  
+  // method to copy the entire current look
+  BeamVault getCopyOfCurrentLook() {
+    return new BeamVault( theLayers ); 
+  }
+  
+  // method to copy a look into the mixer
+  void setLook(BeamVault newLook) {
+    
+    int numElemNew = newLook.size();
+    
+    for (int i=0; i<nLayers; i++) {
+      
+      if (i < numElemNew) {
+        theLayers.set(i, newLook.retrieveCopy(i));
+      }
+      
+      else {
+        theLayers.set(i, new Beam() );
+      }
+    }
+    
   }
   
   

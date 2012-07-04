@@ -15,41 +15,29 @@ class BeamVault {
   BeamVault(int nBeams) {
     theBeams = new ArrayList(nBeams);
     for (int i=0; i<nBeams; i++) {
-      theBeams.add(null);
+      theBeams.add(new Beam() );
     }
   }
   
   // initialize a BeamVault with a single beam
   BeamVault(Beam theBeam) {
     theBeams = new ArrayList(1);
+    theBeams.add(null);
     storeCopy(0, theBeam);
   }
   
   // initialize a BeamVault with a collection of beams
   BeamVault(ArrayList theBeamArray) {
-    int nBeams = theBeamArray.size();
-    theBeams = new ArrayList(nBeams);
-    
-    
-    Beam toCopy;
-    
-    for (int i=0; i< nBeams; i++) {
-      toCopy = (Beam) theBeamArray.get(i);
-      theBeams.add(toCopy.copy());
-    }
+
+    theBeams = copyArrayListOfBeams(theBeamArray);
   }
   
   // copying constructor
   protected BeamVault(BeamVault original) {
-    int nBeams = original.theBeams.size();
-    theBeams = new ArrayList(nBeams);
     
-    Beam toCopy;
+    theBeams = copyArrayListOfBeams(original.theBeams);
     
-    for (int i=0; i< nBeams; i++) {
-      toCopy = (Beam) original.theBeams.get(i);
-      theBeams.add(toCopy.copy());
-    }
+    
   }
   
   // deep copy method
@@ -69,5 +57,8 @@ class BeamVault {
     return toCopy.copy();
   }
   
+  int size() {
+    return theBeams.size();
+  }
   
 }

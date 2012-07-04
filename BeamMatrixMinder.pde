@@ -6,10 +6,15 @@ class BeamMatrixMinder {
   int nColumns = 8; // ignoring master track
   
   boolean[][] isLook = new boolean[nRows][nColumns];
-  ArrayList[] theSaves;
+  ArrayList[] theSaves = new ArrayList[nRows];
+  
+  boolean waitingForBeamSave;
+  boolean waitingForLookSave;
   
   // probably only have one constructor
   BeamMatrixMinder() {
+    
+    println("constructing");
     
     // initialize the arrays that hold everything
     for (int r = 0; r < nRows; r++) {
@@ -25,17 +30,54 @@ class BeamMatrixMinder {
       }
     }
     
+    waitingForBeamSave = false;
+    waitingForLookSave = false;
+    
+    println("constructing done");
+    
   }
   
   // put a copy of a beam into the minder
   void putBeam(int row, int column, Beam theBeam) {
     theSaves[row].set(column, new BeamVault(theBeam) );
+    
+    // this element is a beam
+    isLook[row][column] = false;
+    
+    // update clip launch LED
+    setClipLaunchLED(row, column, 1, 2);
+    
   }
   
+  // put a BeamVault into the beam matrix; assume the BeamVault isn't referenced by anything else
+  void putLook(int row, int column, BeamVault theLook) {
+    theSaves[row].set(column, theLook);
+    
+    // this element is a look
+    isLook[row][column] = true;
+    
+    // update clip launch LED
+    setClipLaunchLED(row, column, 1, 1);
+    
+  }
   
-  // get a copy of an object from the minder
+  // delete an element from the minder
+  void clearElement (int row, int column) {
+    
+    theSaves[row].set(column, null);
+    
+    // update clip launch LED
+    setClipLaunchLED(row, column, 0, 1);
+  }
+  
+  // get an element from the minder
   BeamVault getElement (int row, int column) {
-    return null;
+    return (BeamVault) theSaves[row].get(column);
+  }
+  
+  // is an element a look?
+  boolean elementIsLook(int row, int column) {
+    return isLook[row][column];
   }
   
 }

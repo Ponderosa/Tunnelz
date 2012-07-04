@@ -1,7 +1,7 @@
 // helper functions for controlling APC LEDs
 
 // method to update the state of the control knobs when we change channels
-void updateKnobState(Beam theBeam) {
+void updateKnobState(int theLayer, Beam theBeam) {
   
   int[] knobNums = new int[] {16, 17, 18, 19,
                               20, 21, 22, 23,
@@ -9,8 +9,12 @@ void updateKnobState(Beam theBeam) {
                               52, 53, 54, 55};
   
   for(int i=0; i<knobNums.length; i++) {
-    
-    sendCC(0, knobNums[i], theBeam.getMIDIParam(false, knobNums[i]));
+    if ( knobNums[i] < 48 ) {
+      sendCC(theLayer, knobNums[i], theBeam.getMIDIParam(false, knobNums[i]));
+    }
+    else {
+      sendCC(0, knobNums[i], theBeam.getMIDIParam(false, knobNums[i]));
+    }
     
   }
   
@@ -64,4 +68,43 @@ void setAnimSelectLED(int whichAnim) {
     }
   }
   
+}
+
+// method to set the color state of a clip launch LED
+// state is off=0, on=1, blink=2
+// col is green=0, red=1, yellow=2
+void setClipLaunchLED(int row, int column, int state, int col) {
+  
+  int val;
+  
+  if (0 == state) {
+    val = 0;
+  }
+  else if (1 == state) {
+    val = col*2 + 1;
+  }
+  else if (2 ==  state) {
+    val = (col+1)*2;
+  }
+  else {
+    val = 0;
+  }
+  
+  // column is midi channel, row is note plus offset of 0x35
+  sendNote(column, 0x35+row, val);
+  
+}
+
+// method to set scene launch LED
+// 0=off, 1=on, 2=blink
+void setSceneLaunchLED(int row, int state) {
+  sendNote(0, 0x52 + row, state);
+}
+
+void setBeamSaveLED(int state) {
+  setSceneLaunchLED(0, state);
+}
+
+void setLookSaveLED(int state) {
+  setSceneLaunchLED(1, state);
 }

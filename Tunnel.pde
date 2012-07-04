@@ -322,22 +322,18 @@ class Tunnel extends Beam {
       switch(num) {
         case 0x57: //anim 0
           currAnim = 0;
-          updateKnobState(this);
           setAnimSelectLED(0);
           break;
         case 0x58: //anim 1
           currAnim = 1;
-          updateKnobState(this);
           setAnimSelectLED(1);
           break;
         case 0x59: //anim 2
           currAnim = 2;
-          updateKnobState(this);
           setAnimSelectLED(2);
           break;
         case 0x5A: //anim 3
           currAnim = 3;
-          updateKnobState(this);
           setAnimSelectLED(3);
           break;
       }

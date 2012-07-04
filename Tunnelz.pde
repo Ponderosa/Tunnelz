@@ -12,7 +12,7 @@ MidiOut[] midiOuts = new MidiOut[nMidiOut];
 
 int APCDeviceNum = 0;
 
-boolean useMidi = false;
+boolean useMidi = true;
 boolean midiDebug = true;
 
 
@@ -22,7 +22,7 @@ Mixer mixer = new Mixer(nBeams);
 
 
 // beam state storage
-BeamVault buttonsVault = new BeamVault(40);
+BeamMatrixMinder beamMatrix = new BeamMatrixMinder();
 
 // Animation clipboard
 AnimationClipboard animClipboard = new AnimationClipboard();
@@ -259,8 +259,8 @@ void noteOn(Note note, int device, int channel) {
     
     isCh0Only = isNoteCh0Only(num);
     
-    // if the note didn't come from a ch0 only button and we seem to have switched channels
-    if ( !isCh0Only && (channel != mixer.currentLayer) ) {
+    // if the note didn't come from a ch0 only button or beam array button and we seem to have switched channels
+    if ( !isCh0Only && !(num >= 0x35 && num <= 0x39) && (channel != mixer.currentLayer) ) {
       mixer.currentLayer = channel;
       channelChange = true;
     }
@@ -277,7 +277,7 @@ void noteOn(Note note, int device, int channel) {
   else {
     isCh0Only = ( num >= 0x30 && num <= 0x37 );
     
-    // if the note didn't come from a ch0 only button and we seem to have switched channels
+    // if the note didn't come from a ch0 only knob and we seem to have switched channels
     if ( !isCh0Only && (channel != mixer.currentLayer) ) {
       mixer.currentLayer = channel;
       channelChange = true;
@@ -312,18 +312,18 @@ boolean isNoteCh0Only(int num) {
 }
 
 // method called once the CC and noteOn methods have parsed and formatted data.
-void midiInputHandler(int layerNum, boolean chanChange, boolean isNote, int num, int val) {
+void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, int val) {
     // ensure we don't retrieve null beams
-  if (layerNum < mixer.nLayers() ) {
+  if (channel < mixer.nLayers() ) {
     
     // if the control is an upfader
     if (0x07 == num) {
       // special cases to allow scaling to 255
       if (0 == val) {
-        mixer.setLevel(layerNum, 0);
+        mixer.setLevel(channel, 0);
       }
       else {
-        mixer.setLevel(layerNum, 2*val + 1);
+        mixer.setLevel(channel, 2*val + 1);
       }
     }
     
@@ -331,7 +331,7 @@ void midiInputHandler(int layerNum, boolean chanChange, boolean isNote, int num,
     else {
     
       // get the appropriate beam
-      Beam thisBeam = mixer.getBeamFromLayer(layerNum);
+      Beam thisBeam = mixer.getBeamFromLayer(mixer.currentLayer);
       
       // if nudge+: animation paste
       if (0x64 == num) {
@@ -339,14 +339,111 @@ void midiInputHandler(int layerNum, boolean chanChange, boolean isNote, int num,
         if (animClipboard.hasData) {
           thisBeam.replaceCurrentAnimation( animClipboard.paste() );
           thisBeam.updateParams();
-          updateKnobState(thisBeam);
+          updateKnobState(mixer.currentLayer, thisBeam);
         }
       }
       
       // if nudge-: animation copy
-      if (0x65 == num) {
+      else if (0x65 == num) {
         animClipboard.copy( thisBeam.getCurrentAnimation() );
       }
+      
+      // beam save mode toggle
+      else if (0x52 == num) {
+        
+        // if we were already waiting for a beam save
+        if (beamMatrix.waitingForBeamSave) {
+          
+          /*
+          beamMatrix.waitingForBeamSave = false;
+          setBeamSaveLED(0);
+          
+          println("beam save off");
+          */
+        }
+        
+        // we're activating beam save mode
+        else {
+          // turn on beam save mode
+          beamMatrix.waitingForBeamSave = true;
+          setBeamSaveLED(2);
+          
+          // turn off look save mode
+          beamMatrix.waitingForLookSave = false;
+          setLookSaveLED(0);
+          
+          println("beam save on");
+        }
+        
+      }
+      
+      // look save mode toggle
+      else if (0x53 == num) {
+        
+        // if we were already waiting for a look save
+        if (beamMatrix.waitingForLookSave) {
+          /*
+          beamMatrix.waitingForLookSave = false;
+          setLookSaveLED(0);
+          
+          println("look save off");
+          */
+        }
+        
+        // we're activating look save mode
+        else {
+          beamMatrix.waitingForLookSave = true;
+          setLookSaveLED(2);
+          
+          // turn off beam save mode
+          beamMatrix.waitingForBeamSave = false;
+          setBeamSaveLED(0);
+          
+          println("look save on");
+        }
+      }
+      
+      // if we just pushed a beam save matrix button
+      else if ( isNote && (num >= 0x35) && (num <= 0x39) && (channel < 8) ) {
+        
+        // if we're in save mode
+        if (beamMatrix.waitingForBeamSave) {
+          beamMatrix.putBeam(num - 0x35, channel, mixer.getCurrentBeam() );
+          beamMatrix.waitingForBeamSave = false;
+          println("saving a beam");
+        }
+        else if (beamMatrix.waitingForLookSave) {
+          beamMatrix.putLook(num - 0x35, channel, mixer.getCopyOfCurrentLook() );
+          beamMatrix.waitingForLookSave = false;
+          println("saving a look");
+        }
+        
+        // otherwise we're getting a thing from the minder
+        else {
+          BeamVault theSavedThing = beamMatrix.getElement(num - 0x35, channel);
+          
+          // we're using null for empty elements
+          if (theSavedThing != null) {
+          
+            if ( beamMatrix.elementIsLook(num - 0x35, channel) ) {
+              mixer.setLook(theSavedThing);
+              println("setting a look.");
+            }
+            else {
+              mixer.setCurrentBeam( theSavedThing.retrieveCopy(0) );
+              println("setting a beam");
+            }
+            
+            Beam currentBeam = mixer.getCurrentBeam();
+            updateKnobState( mixer.currentLayer, currentBeam );
+            setAnimSelectLED( currentBeam.currAnim );
+            
+          }
+          
+        }
+        
+      }
+      
       
       // if beam-specific parameter:
       else {
@@ -355,7 +452,6 @@ void midiInputHandler(int layerNum, boolean chanChange, boolean isNote, int num,
       
         // update knob state if we've changed channel
         if (chanChange) {
-          updateKnobState(thisBeam);
           setBottomLEDRings(mixer.currentLayer, thisBeam);
           setTopLEDRings(thisBeam);
           setAnimSelectLED(thisBeam.currAnim);
@@ -363,6 +459,8 @@ void midiInputHandler(int layerNum, boolean chanChange, boolean isNote, int num,
     
         // call the update method
         thisBeam.updateParams();
+        
+        updateKnobState(mixer.currentLayer, thisBeam);
       }
     } 
   }
