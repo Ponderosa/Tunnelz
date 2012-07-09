@@ -9,13 +9,7 @@ void updateKnobState(int theLayer, Beam theBeam) {
                               52, 53, 54, 55};
   
   for(int i=0; i<knobNums.length; i++) {
-    if ( knobNums[i] < 48 ) {
-      sendCC(theLayer, knobNums[i], theBeam.getMIDIParam(false, knobNums[i]));
-    }
-    else {
-      sendCC(0, knobNums[i], theBeam.getMIDIParam(false, knobNums[i]));
-    }
-    
+    sendCC(0, knobNums[i], theBeam.getMIDIParam(false, knobNums[i]));
   }
   
 }
@@ -89,7 +83,7 @@ void setClipLaunchLED(int row, int column, int state, int col) {
   else {
     val = 0;
   }
-  
+
   // column is midi channel, row is note plus offset of 0x35
   sendNote(column, 0x35+row, val);
   
@@ -108,3 +102,26 @@ void setBeamSaveLED(int state) {
 void setLookSaveLED(int state) {
   setSceneLaunchLED(1, state);
 }
+
+void setDeleteLED(int state) {
+  setSceneLaunchLED(2, state);
+}
+
+void setTrackSelectLED(int channel, int state) {
+  sendNote(channel, 0x33, state);
+}
+
+void setTrackSelectLEDRadio(int channel) {
+  for (int i=0; i<8; i++) {
+    
+    if (i == channel) {
+      setTrackSelectLED(i,1);
+    }
+    else{
+      setTrackSelectLED(i,0);
+    }
+    
+  }
+  
+}
+

@@ -10,11 +10,10 @@ class BeamMatrixMinder {
   
   boolean waitingForBeamSave;
   boolean waitingForLookSave;
+  boolean waitingForDelete;
   
   // probably only have one constructor
   BeamMatrixMinder() {
-    
-    println("constructing");
     
     // initialize the arrays that hold everything
     for (int r = 0; r < nRows; r++) {
@@ -27,13 +26,16 @@ class BeamMatrixMinder {
         // initialize the elements
         isLook[r][c] = false;
         theSaves[r].add(null);
+        setClipLaunchLED(r, c, 0, 0);
       }
     }
     
     waitingForBeamSave = false;
+    setBeamSaveLED(0);
     waitingForLookSave = false;
-    
-    println("constructing done");
+    setLookSaveLED(0);
+    waitingForDelete = false;
+    setDeleteLED(0);
     
   }
   

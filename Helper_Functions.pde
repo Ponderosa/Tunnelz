@@ -11,3 +11,16 @@ ArrayList copyArrayListOfBeams(ArrayList toCopy) {
   
   return theCopy;
 }
+
+
+// method to unwrap angles
+float unwrap(float theAngle) {
+  while (PI < theAngle) {
+    theAngle = theAngle - TWO_PI;
+  }
+  while (PI < -1*theAngle) {
+    theAngle = theAngle + TWO_PI;
+  }
+  
+  return theAngle;
+}

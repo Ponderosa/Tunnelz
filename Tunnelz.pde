@@ -4,16 +4,23 @@ import processing.opengl.*;
 boolean useOpenGL = false;
 
 // midi stuff
+/*
 import promidi.*;
 
 MidiIO midiIO;
 int nMidiOut = 9;
 MidiOut[] midiOuts = new MidiOut[nMidiOut];
+*/
 
-int APCDeviceNum = 0;
+import themidibus.*;
+
+MidiBus midiBus;
+
+int APCDeviceNumIn = 1;
+int APCDeviceNumOut = 1;
 
 boolean useMidi = true;
-boolean midiDebug = true;
+boolean midiDebug = false;
 
 
 // the beam mixer
@@ -22,7 +29,7 @@ Mixer mixer = new Mixer(nBeams);
 
 
 // beam state storage
-BeamMatrixMinder beamMatrix = new BeamMatrixMinder();
+BeamMatrixMinder beamMatrix;
 
 // Animation clipboard
 AnimationClipboard animClipboard = new AnimationClipboard();
@@ -92,28 +99,18 @@ void setup() {
   
   
 
-  //get an instance of MidiIO
-  midiIO = MidiIO.getInstance(this);
-  println("printPorts of midiIO");
-
-  //print a list of all available devices
-  midiIO.printDevices();
   
   // open midi outputs
   if (useMidi) {
-    for (int i=0; i<nMidiOut; i++) {
-      midiOuts[i] = midiIO.getMidiOut(i,APCDeviceNum); // so stupid that the syntax is backwards for opening inputs and outputs...
-    } 
+    // print all available midi devices
+    MidiBus.list();
+    midiBus = new MidiBus(this, APCDeviceNumIn, APCDeviceNumOut);
   }
+  
+  beamMatrix = new BeamMatrixMinder();
 
   // open midi channels for each mixer channel and fill the mixer; for now all tunnels.
   for(int i = 0; i < mixer.nLayers(); i++) {
-    
-    // open midi input for this beam
-    if (useMidi) {
-      midiIO.openInput(APCDeviceNum,i);
-    
-    }
     
     mixer.putBeamInLayer(i, new Tunnel());
     
@@ -174,6 +171,8 @@ void setup() {
     }
   }
   
+  // pretend we just pushed track select 1
+  midiInputHandler(0, true, true, 0x33, 127);
   
 }
 
@@ -196,120 +195,78 @@ void draw() {
   }
   */
   
-  // println(frameRate);
+  
+  if (frameNumber % 240 == 0) {
+    println(frameRate);
+  }
+  
+  frameNumber++;
 }
 
 
 
-void controllerIn(Controller controller, int device, int channel) {
-  
-  int num = controller.getNumber();
-  int val = controller.getValue();
-  
-  boolean channelChange = false;
-  boolean isCh0Only = isControlCh0Only(num);
-  
-  // if the control didn't come from an APC channel 0 only control and we seem to have switched channels
-  if ( !isCh0Only  && (channel != mixer.currentLayer) ) {
-    mixer.currentLayer = channel;
-    channelChange = true;
-  }
-  
-  // if the control came from a top knob, interpret correctly
-  if ( isCh0Only ) {
+void controllerChange(int channel, int number, int value) {
+
+  if ( !keepControlChannelData(number) ) {
     channel = mixer.currentLayer;
   }
-  
-  midiInputHandler(channel, channelChange, false, num, val);
   
   if (midiDebug) {
     println("controller in");
     print("channel  = ");
     println(channel);
     print("number   = ");
-    println(num);
+    println(number);
     print("value    = ");
-    println(val);
+    println(value);
   }
+  
+  midiInputHandler(channel, false, false, number, value);
 }
 
-// list of controls that only come from midi channel 0
-boolean isControlCh0Only(int num) {
-  if ( (num > 46 && num < 56) || (14 == num) || (15 == num) )
-    return true;
+boolean keepControlChannelData(int num) {
+  if (7 == num) return true;
   else return false;
 }
 
-
-
-void noteOn(Note note, int device, int channel) {
-
-  // cases: note came from a button: has velocity = 127
-  // note came from a stupid CC as note bug, has velocity = 0
-  
-  int num = note.getPitch();
-  int vel = note.getVelocity();
+void noteOn(int channel, int pitch, int velocity) {
   
   boolean channelChange = false;
   
-  boolean isCh0Only;
-  
-  // if the note came from a button
-  if ( vel > 0 ) {
+  // if this button is always channel 0
+  if ( !keepNoteChannelData(pitch) ) {
     
-    isCh0Only = isNoteCh0Only(num);
-    
-    // if the note didn't come from a ch0 only button or beam array button and we seem to have switched channels
-    if ( !isCh0Only && !(num >= 0x35 && num <= 0x39) && (channel != mixer.currentLayer) ) {
-      mixer.currentLayer = channel;
-      channelChange = true;
-    }
-  
-    // if the note came from a ch0 only button, interpret correctly
-    if ( isCh0Only ) {
-      channel = mixer.currentLayer;
-    }
-    
-    midiInputHandler(channel, channelChange, true, num, 0);
+    channel = mixer.currentLayer;
   }
   
-  // if velocity is 0, ie, CC as note bug
-  else {
-    isCh0Only = ( num >= 0x30 && num <= 0x37 );
-    
-    // if the note didn't come from a ch0 only knob and we seem to have switched channels
-    if ( !isCh0Only && (channel != mixer.currentLayer) ) {
-      mixer.currentLayer = channel;
-      channelChange = true;
-    }
-  
-    // if the note came from a ch0 only button, interpret correctly
-    if ( isCh0Only ) {
-      channel = mixer.currentLayer;
-    }
-    
-    midiInputHandler(channel, channelChange, false, num, 0);
+  // if we pushed a track select button, not the master
+  else if ( 0x33 == pitch && channel < 8 ) {
+    mixer.currentLayer = channel;
+    channelChange = true;
   }
   
-
   if (midiDebug) {
     println("note on");
     print("channel  = ");
     println(channel);
     print("pitch    = ");
-    println(num);
+    println(pitch);
     print("velocity = ");
-    println(vel);
+    println(velocity);
   }
+  
+  midiInputHandler(channel, channelChange, true, pitch, 0);
+
 }
 
-
-
-boolean isNoteCh0Only(int num) {
-  if ( num >= 0x50 && num <= 0x65 ) // thanks APC40 programmers for this simple range!
+// does this note come from a button whose channel data we care about?
+boolean keepNoteChannelData(int num) {
+  if (num >= 0x30 && num <= 0x39) {
     return true;
+  }
   else return false;
 }
+
 
 // method called once the CC and noteOn methods have parsed and formatted data.
 void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, int val) {
@@ -351,15 +308,22 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
       // beam save mode toggle
       else if (0x52 == num) {
         
+          // turn off look save mode
+          beamMatrix.waitingForLookSave = false;
+          setLookSaveLED(0);
+          
+          // turn off delete mode
+          beamMatrix.waitingForDelete = false;
+          setDeleteLED(0);
+        
         // if we were already waiting for a beam save
         if (beamMatrix.waitingForBeamSave) {
           
-          /*
           beamMatrix.waitingForBeamSave = false;
           setBeamSaveLED(0);
           
           println("beam save off");
-          */
+          
         }
         
         // we're activating beam save mode
@@ -368,26 +332,30 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
           beamMatrix.waitingForBeamSave = true;
           setBeamSaveLED(2);
           
-          // turn off look save mode
-          beamMatrix.waitingForLookSave = false;
-          setLookSaveLED(0);
-          
           println("beam save on");
         }
         
-      }
+      } // end beam save mode toggle
       
       // look save mode toggle
       else if (0x53 == num) {
         
+          // turn off beam save mode
+          beamMatrix.waitingForBeamSave = false;
+          setBeamSaveLED(0);
+          
+          // turn off delete mode
+          beamMatrix.waitingForDelete = false;
+          setDeleteLED(0);
+        
         // if we were already waiting for a look save
         if (beamMatrix.waitingForLookSave) {
-          /*
+          
           beamMatrix.waitingForLookSave = false;
           setLookSaveLED(0);
           
           println("look save off");
-          */
+          
         }
         
         // we're activating look save mode
@@ -395,13 +363,30 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
           beamMatrix.waitingForLookSave = true;
           setLookSaveLED(2);
           
-          // turn off beam save mode
-          beamMatrix.waitingForBeamSave = false;
-          setBeamSaveLED(0);
-          
           println("look save on");
         }
-      }
+      } // end look save mode toggle
+      
+      // delete saved element mode toggle
+      else if (0x54 == num) {
+        
+        // these buttons are radio
+        beamMatrix.waitingForBeamSave = false;
+        setBeamSaveLED(0);
+        beamMatrix.waitingForLookSave = false;
+        setLookSaveLED(0);
+        
+        if (beamMatrix.waitingForDelete) {
+          beamMatrix.waitingForDelete = false;
+          setDeleteLED(0);
+        }
+
+        // we're activating delete mode
+        else {
+          beamMatrix.waitingForDelete = true;
+          setDeleteLED(2);
+        }
+      } // end delete element mode toggle
       
       // if we just pushed a beam save matrix button
       else if ( isNote && (num >= 0x35) && (num <= 0x39) && (channel < 8) ) {
@@ -410,12 +395,21 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
         if (beamMatrix.waitingForBeamSave) {
           beamMatrix.putBeam(num - 0x35, channel, mixer.getCurrentBeam() );
           beamMatrix.waitingForBeamSave = false;
+          setBeamSaveLED(0);
           println("saving a beam");
         }
         else if (beamMatrix.waitingForLookSave) {
           beamMatrix.putLook(num - 0x35, channel, mixer.getCopyOfCurrentLook() );
           beamMatrix.waitingForLookSave = false;
+          setLookSaveLED(0);
           println("saving a look");
+        }
+        // if we're in delete mode
+        else if (beamMatrix.waitingForDelete) {
+          beamMatrix.clearElement(num - 0x35, channel);
+          beamMatrix.waitingForDelete = false;
+          setDeleteLED(0);
+          println("deleted an element");
         }
         
         // otherwise we're getting a thing from the minder
@@ -452,6 +446,7 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
       
         // update knob state if we've changed channel
         if (chanChange) {
+          setTrackSelectLEDRadio(mixer.currentLayer);
           setBottomLEDRings(mixer.currentLayer, thisBeam);
           setTopLEDRings(thisBeam);
           setAnimSelectLED(thisBeam.currAnim);
@@ -467,60 +462,29 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
 }
 
 
-
-// method to unwrap angles
-float unwrap(float theAngle) {
-  while (PI < theAngle) {
-    theAngle = theAngle - TWO_PI;
-  }
-  while (PI < -1*theAngle) {
-    theAngle = theAngle + TWO_PI;
-  }
-  
-  return theAngle;
-}
-
-
 // wrapper method for sending midi control changes
 void sendCC(int channel, int number, int val) {
-  if (channel < nMidiOut) {
-    midiOuts[channel].sendController(new Controller(number, val)); 
-  }
+    midiBus.sendControllerChange(channel, number, val);
 }
 
 // wrapper method for sending midi notes, because we don't care about most parameters
 void sendNote(int channel, int number, int velocity) {
-  if (channel < nMidiOut) {
-    midiOuts[channel].sendNote(new Note(number, velocity, 100));
-  } 
+    midiBus.sendNoteOn(channel, number, velocity);
 }
 
 
 // ----------------------------------------------
 // as of yet unused midi methods
 
-void noteOff(Note note, int device, int channel) {
-  int num = note.getPitch();
-  int vel = note.getVelocity();
-
+void noteOff(int channel, int pitch, int velocity) {
   
   if (midiDebug) {
     println("note off");
     print("channel  = ");
     println(channel);
     print("pitch    = ");
-    println(num);
+    println(pitch);
     print("velocity = ");
-    println(vel);
+    println(velocity);
   }
 }
-
-
-void programChange(ProgramChange programChange, int device, int channel) {
-  int num = programChange.getNumber();
-
-  println("program change");
-  print("number   = ");
-  println(num);
-}
-
