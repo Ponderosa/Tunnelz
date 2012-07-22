@@ -1,4 +1,5 @@
 import processing.opengl.*;
+import java.io.Serializable;
 
 // graphics options
 boolean useOpenGL = false;
@@ -31,6 +32,11 @@ Mixer mixer = new Mixer(nBeams);
 // beam state storage
 BeamMatrixMinder beamMatrix;
 
+// file loading and saving
+boolean loadFile = false;
+String fileToLoad = "";
+String filePrefix = "/Users/Chris/Beam Effects Project/Program State/tunnelz_state_";
+
 // Animation clipboard
 AnimationClipboard animClipboard = new AnimationClipboard();
 
@@ -44,11 +50,9 @@ int frameNumber;
 //int y_size = 720;
 
 int x_size = 1280;
-int y_size = 768;
+int y_size = 720;
 
 int x_center, y_center;
-
-
 
 // various constraints and multipliers
 int maxRadius; // largest radius given screen constraints
@@ -172,7 +176,12 @@ void setup() {
   }
   
   // pretend we just pushed track select 1
-  midiInputHandler(0, true, true, 0x33, 127);
+  if (useMidi) {
+    midiInputHandler(0, true, true, 0x33, 127);
+  }
+  
+  //save test
+  //saveState(filePrefix,true);
   
 }
 
@@ -274,7 +283,7 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
   if (channel < mixer.nLayers() ) {
     
     // if the control is an upfader
-    if (0x07 == num) {
+    if (0x07 == num && !isNote) {
       // special cases to allow scaling to 255
       if (0 == val) {
         mixer.setLevel(channel, 0);
@@ -291,7 +300,7 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
       Beam thisBeam = mixer.getBeamFromLayer(mixer.currentLayer);
       
       // if nudge+: animation paste
-      if (0x64 == num) {
+      if (isNote && 0x64 == num) {
         // ensure we don't paste null
         if (animClipboard.hasData) {
           thisBeam.replaceCurrentAnimation( animClipboard.paste() );
@@ -301,12 +310,12 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
       }
       
       // if nudge-: animation copy
-      else if (0x65 == num) {
+      else if (isNote && 0x65 == num) {
         animClipboard.copy( thisBeam.getCurrentAnimation() );
       }
       
       // beam save mode toggle
-      else if (0x52 == num) {
+      else if (isNote && 0x52 == num) {
         
           // turn off look save mode
           beamMatrix.waitingForLookSave = false;
@@ -338,7 +347,7 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
       } // end beam save mode toggle
       
       // look save mode toggle
-      else if (0x53 == num) {
+      else if (isNote && 0x53 == num) {
         
           // turn off beam save mode
           beamMatrix.waitingForBeamSave = false;
@@ -368,7 +377,7 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
       } // end look save mode toggle
       
       // delete saved element mode toggle
-      else if (0x54 == num) {
+      else if (isNote && 0x54 == num) {
         
         // these buttons are radio
         beamMatrix.waitingForBeamSave = false;
@@ -414,12 +423,15 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
         
         // otherwise we're getting a thing from the minder
         else {
-          BeamVault theSavedThing = beamMatrix.getElement(num - 0x35, channel);
           
-          // we're using null for empty elements
-          if (theSavedThing != null) {
+          int row = num - 0x35;
           
-            if ( beamMatrix.elementIsLook(num - 0x35, channel) ) {
+          if ( beamMatrix.elementHasData(row, channel) ) {
+          
+            BeamVault theSavedThing = beamMatrix.getElement(row, channel);
+          
+          
+            if ( beamMatrix.elementIsLook(row, channel) ) {
               mixer.setLook(theSavedThing);
               println("setting a look.");
             }
@@ -431,11 +443,23 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
             Beam currentBeam = mixer.getCurrentBeam();
             updateKnobState( mixer.currentLayer, currentBeam );
             setAnimSelectLED( currentBeam.currAnim );
-            
           }
           
         }
         
+      }
+      
+      // save state to file
+      else if (isNote && 0x51 == num) {
+        /*
+        // call the file saving method with auto moment naming
+        try {
+          saveState(filePrefix, true);
+        }
+        catch (Exception e) {
+          println("could not save properly!"); 
+        }
+        */
       }
       
       

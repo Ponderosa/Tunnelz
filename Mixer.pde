@@ -1,9 +1,9 @@
 
 // class that holds a collection of beams in layers, and understands how they are mixed.
-class Mixer {
+class Mixer implements Serializable {
   
   private int nLayers;
-  private ArrayList theLayers;
+  private Beam[] theLayers;
   private int[] levels;
   int currentLayer;
   
@@ -11,7 +11,7 @@ class Mixer {
   Mixer() {
     
     nLayers = 1;
-    theLayers = new ArrayList(nLayers);
+    theLayers = new Beam[] {new Beam()};
     levels = new int[] {0};
     
   }
@@ -20,11 +20,11 @@ class Mixer {
   Mixer(int nLayers) {
   
     this.nLayers = nLayers;
-    theLayers = new ArrayList(nLayers);
+    theLayers = new Beam[nLayers];
     levels = new int[nLayers];
     
     for (int i = 0; i < nLayers; i++) {
-      theLayers.add(null);
+      theLayers[i] = new Beam();
       levels[i] = 0;
     }
    
@@ -32,17 +32,17 @@ class Mixer {
   
   // method to put a beam in a layer
   void putBeamInLayer(int layer, Beam theBeam) {
-    theLayers.set(layer, theBeam);
+    theLayers[layer] = theBeam;
   }
   
   // method to get a beam from a layer
   Beam getBeamFromLayer(int layer) {
-    return (Beam) theLayers.get(layer);
+    return theLayers[layer];
   }
   
   // method to get the current beam
   Beam getCurrentBeam() {
-    return (Beam) theLayers.get(currentLayer); 
+    return theLayers[currentLayer]; 
   }
   
   // method to set the current beam
@@ -88,11 +88,11 @@ class Mixer {
     for (int i=0; i<nLayers; i++) {
       
       if (i < numElemNew) {
-        theLayers.set(i, newLook.retrieveCopy(i));
+        theLayers[i] = newLook.retrieveCopy(i);
       }
       
       else {
-        theLayers.set(i, new Beam() );
+        theLayers[i] = new Beam();
       }
     }
     

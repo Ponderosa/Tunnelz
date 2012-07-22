@@ -1,5 +1,5 @@
 // generic Beam class
-class Beam {
+class Beam implements java.io.Serializable {
   
   String type;
   int currAnim = 0;
@@ -41,5 +41,9 @@ class Beam {
   
   int getMIDIParam(boolean isNote, int num) {
     return 0;
+  }
+  
+  String toString() {
+    return type;
   }
 } // end of Beam class

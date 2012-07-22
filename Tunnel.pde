@@ -1,6 +1,6 @@
 
 // class for making ellipsoidal tunnels a la the prototype
-class Tunnel extends Beam {
+class Tunnel extends Beam implements Serializable {
   
   // integer-valued parameters, derived from midi inputs and used to initialize the beam
   int rotSpeedI, thicknessI, radiusI, ellipseAspectI;
@@ -62,6 +62,33 @@ class Tunnel extends Beam {
     segmentColors = new color[maxSegs];
     
     updateParams();
+  }
+  
+  
+  
+  // tunnel constructor for a tunnel loaded from file
+  Tunnel(String[] params) {
+    type = params[0];
+    rotSpeedI = int(params[1]);
+    thicknessI = int(params[2]);
+    radiusI = int(params[3]);
+    ellipseAspectI = int(params[4]);
+    colCenterI = int(params[5]);
+    colWidthI = int(params[6]);
+    colSpreadI = int(params[7]);
+    colSatI = int(params[8]);
+    segsI = int(params[9]);
+    blackingI = int(params[10]);
+    currAngle = float(params[11]);
+    xOffset = int(params[12]);
+    yOffset = int(params[13]);
+    currAnim = int(params[14]);
+    
+    theAnims[0] = new Animation(Arrays.copyOfRange(params, 15, 20));
+    theAnims[1] = new Animation(Arrays.copyOfRange(params, 20, 25));
+    theAnims[2] = new Animation(Arrays.copyOfRange(params, 25, 30));
+    theAnims[3] = new Animation(Arrays.copyOfRange(params, 30, 35));
+    
   }
   
   // tunnel constructor for a saved tunnel
@@ -476,5 +503,28 @@ class Tunnel extends Beam {
     
     return theVal;
   } // end of getMIDIParam method
+  
+  
+  String toString() {
+    return type + "\t" +
+           rotSpeedI + "\t" +
+           thicknessI + "\t" +
+           radiusI + "\t" +
+           ellipseAspectI + "\t" +
+           colCenterI + "\t" +
+           colWidthI + "\t" +
+           colSpreadI + "\t" +
+           colSatI + "\t" +
+           segsI + "\t" +
+           blackingI + "\t" +
+           currAngle + "\t" +
+           xOffset + "\t" +
+           yOffset + "\t" +
+           currAnim  + "\t" +
+           theAnims[0].toString() + "\t" +
+           theAnims[1].toString() + "\t" +
+           theAnims[2].toString() + "\t" +
+           theAnims[3].toString();
+  }
   
 } // end of Tunnel class

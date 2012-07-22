@@ -1,7 +1,7 @@
 
 // class for storing and retrieving deep copies of beams; the idea is that
 // beams stored in a vault are only referenced by the Vault itself.
-class BeamVault {
+class BeamVault implements Serializable {
   
   // the list of beams
   private ArrayList theBeams;
@@ -30,6 +30,10 @@ class BeamVault {
   BeamVault(ArrayList theBeamArray) {
 
     theBeams = copyArrayListOfBeams(theBeamArray);
+  }
+  
+  BeamVault(Beam[] theBeamArray) {
+    theBeams = new ArrayList(Arrays.asList(theBeamArray));
   }
   
   // copying constructor
@@ -61,4 +65,16 @@ class BeamVault {
     return theBeams.size();
   }
   
+  // method to return this collection of beams as an array of strings
+  String[] toStringArray() {
+    int nBeams = size();
+    String[] theStrings = new String[nBeams];
+    
+    // loop over beams and make them into strings
+    for (int i = 0; i < nBeams; i++) {
+      theStrings[i] = ((Beam) theBeams.get(i)).toString(); 
+    }
+    
+    return theStrings;
+  } 
 }

@@ -1,4 +1,6 @@
-class Animation {
+import java.io.Serializable;
+
+class Animation implements Serializable {
  
   // midi-driven parameters
   int typeI, speedI, weightI, targetI;
@@ -32,14 +34,26 @@ class Animation {
   }
   
   // constructor if we know the parameters already
-  Animation(int theTypeI, int theSpeedI, int theWeightI, int theTargetI) {
+  Animation(int theTypeI, int theSpeedI, int theWeightI, int theTargetI, float theCurrAngle) {
     typeI = theTypeI;
     speedI = theSpeedI;
     weightI = theWeightI;
     targetI = theTargetI;
     
-    currAngle = 0;   
+    currAngle = theCurrAngle;   
    
+    updateParams();
+  }
+  
+  // constructor from string array from file
+  Animation(String[] params) {
+    typeI = int(params[0]);
+    speedI = int(params[1]);
+    weightI = int(params[2]);
+    targetI = int(params[3]);
+    
+    currAngle = float(params[4]);
+    
     updateParams();
   }
   
@@ -138,6 +152,15 @@ class Animation {
     
     return 0.0;
 
+  }
+  
+  // convert to string for saving purposes
+  String toString() {
+    return "" + typeI + "\t" +
+           speedI + "\t" +
+           weightI + "\t" +
+           targetI + "\t" +
+           currAngle;
   }
 
 } // end of Animation class
