@@ -21,7 +21,7 @@ class Beam implements java.io.Serializable {
   void updateParams() {
   }
   
-  void display(int level) {
+  void display(int level, boolean drawAsMask) {
   }
   
   Animation getAnimation(int theAnim) {

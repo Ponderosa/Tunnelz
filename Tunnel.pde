@@ -258,7 +258,7 @@ class Tunnel extends Beam implements Serializable {
   
   
   // method that draws the beam
-  void display(int level) {
+  void display(int level, boolean drawAsMask) {
     
     // calulcate the rotation
     currAngle = currAngle + rotSpeed;
@@ -283,9 +283,17 @@ class Tunnel extends Beam implements Serializable {
 
       // only draw something if the segment color isn't black.
       if(color(0) != segmentColors[i]) {
-        stroke( blendColor(segmentColors[i], color(0,0,level), MULTIPLY) );
-        // stroke( segmentColors[i] );
+        
+        // if we're drawing this beam as a mask, make the segment black
+        if (drawAsMask) {
+          stroke(0);
+        }
+        // otherwise pick the color and set the level
+        else {
+          stroke( blendColor(segmentColors[i], color(0,0,level), MULTIPLY) );
+        }
       }
+      
       else {
         noStroke();
       }

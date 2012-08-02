@@ -50,7 +50,7 @@ int frameNumber;
 //int y_size = 720;
 
 int x_size = 1280;
-int y_size = 720;
+int y_size = 800;
 
 int x_center, y_center;
 
@@ -316,12 +316,18 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
     else if (0x32 == num && isNote) {
       if (127 == val) {
         mixer.bumpOn(channel);
-        setBumpButtonLED(channel, 1);
+        setBumpButtonLED(channel, true);
       }
       else {
         mixer.bumpOff(channel);
-        setBumpButtonLED(channel, 0);
+        setBumpButtonLED(channel, false);
       }
+    }
+    
+    // if a mask button
+    else if (0x31 == num && isNote) {
+      boolean newState = mixer.toggleMaskState(channel);
+      setMaskButtonLED(channel, newState);
     }
     
     // if not a mixer parameter

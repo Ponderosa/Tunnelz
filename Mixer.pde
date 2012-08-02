@@ -6,6 +6,7 @@ class Mixer implements Serializable {
   private Beam[] theLayers;
   private int[] levels;
   private boolean[] bump;
+  private boolean[] mask;
   int currentLayer;
   
   // generic constructor
@@ -15,6 +16,7 @@ class Mixer implements Serializable {
     theLayers = new Beam[] {new Beam()};
     levels = new int[] {0};
     bump = new boolean[] {false};
+    mask = new boolean[] {false};
     
   }
   
@@ -25,11 +27,13 @@ class Mixer implements Serializable {
     theLayers = new Beam[nLayers];
     levels = new int[nLayers];
     bump = new boolean[nLayers];
+    mask = new boolean[nLayers];
     
     for (int i = 0; i < nLayers; i++) {
       theLayers[i] = new Beam();
       levels[i] = 0;
       bump[i] = false;
+      mask[i] = false;
     }
    
   }
@@ -66,6 +70,11 @@ class Mixer implements Serializable {
     bump[layer] = false;
   }
   
+  boolean toggleMaskState(int layer) {
+    mask[layer] = !mask[layer];
+    return mask[layer];
+  }
+  
   // returns the number of layers
   int nLayers() {
     return nLayers;
@@ -82,10 +91,10 @@ class Mixer implements Serializable {
       if (levels[i] > 0 || bump[i]) {
         drawMe = getBeamFromLayer(i);
         if (bump[i]) {
-          drawMe.display(255);
+          drawMe.display(255, mask[i]);
         }
         else {
-          drawMe.display(levels[i]);
+          drawMe.display(levels[i], mask[i]);
         }
       }
       
