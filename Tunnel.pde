@@ -21,6 +21,8 @@ class Tunnel extends Beam implements Serializable {
   
   // constants
   int rotSpeedScale = 400;
+  int xNudge = 10;
+  int yNudge = 10;
   
   // array of colors for current parameters
   color[] segmentColors;
@@ -347,6 +349,7 @@ class Tunnel extends Beam implements Serializable {
     // define the mapping between APC40 and parameters and set values
     if (isNote) {
       switch(num) {
+        // aniamtion select buttons:
         case 0x57: //anim 0
           currAnim = 0;
           setAnimSelectLED(0);
@@ -363,7 +366,25 @@ class Tunnel extends Beam implements Serializable {
           currAnim = 3;
           setAnimSelectLED(3);
           break;
-      }
+          
+        // directional controls
+        case 0x5E: // up on D-pad
+          yOffset -= yNudge;
+          break;
+        case 0x5F: // down on D-pad
+          yOffset += yNudge;
+          break;
+        case 0x60: // right on D-pad
+          xOffset += xNudge;
+          break;
+        case 0x61: // left on D-pad
+          xOffset -= xNudge;
+          break;
+        case 0x62: // "shift" - beam center
+          xOffset = 0;
+          yOffset = 0;
+          break;
+      } // end of note num switch
       
     }
     
@@ -385,7 +406,7 @@ class Tunnel extends Beam implements Serializable {
           
         // geometry parameters: bottom of lower bank
         case 20: // rotation speed
-            rotSpeedI = val;
+          rotSpeedI = val;
           break; 
         case 21: // thickness
           thicknessI = val;
