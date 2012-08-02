@@ -125,3 +125,7 @@ void setTrackSelectLEDRadio(int channel) {
   
 }
 
+void setBumpButtonLED(int channel, int state) {
+  sendNote(channel, 0x32, state);
+}
+

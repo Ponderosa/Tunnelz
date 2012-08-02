@@ -264,8 +264,27 @@ void noteOn(int channel, int pitch, int velocity) {
     println(velocity);
   }
   
-  midiInputHandler(channel, channelChange, true, pitch, 0);
+  midiInputHandler(channel, channelChange, true, pitch, 127);
 
+}
+
+
+void noteOff(int channel, int pitch, int velocity) {
+  
+  // for now we're only using note off for bump buttons
+  if (0x32 == pitch) {
+    midiInputHandler(channel, false, true, pitch, 0);
+  }
+  
+  if (midiDebug) {
+    println("note off");
+    print("channel  = ");
+    println(channel);
+    print("pitch    = ");
+    println(pitch);
+    print("velocity = ");
+    println(velocity);
+  }
 }
 
 // does this note come from a button whose channel data we care about?
@@ -293,7 +312,19 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
       }
     }
     
-    // if not an upfader
+    // if a bump button
+    else if (0x32 == num && isNote) {
+      if (127 == val) {
+        mixer.bumpOn(channel);
+        setBumpButtonLED(channel, 1);
+      }
+      else {
+        mixer.bumpOff(channel);
+        setBumpButtonLED(channel, 0);
+      }
+    }
+    
+    // if not a mixer parameter
     else {
     
       // get the appropriate beam
@@ -494,21 +525,4 @@ void sendCC(int channel, int number, int val) {
 // wrapper method for sending midi notes, because we don't care about most parameters
 void sendNote(int channel, int number, int velocity) {
     midiBus.sendNoteOn(channel, number, velocity);
-}
-
-
-// ----------------------------------------------
-// as of yet unused midi methods
-
-void noteOff(int channel, int pitch, int velocity) {
-  
-  if (midiDebug) {
-    println("note off");
-    print("channel  = ");
-    println(channel);
-    print("pitch    = ");
-    println(pitch);
-    print("velocity = ");
-    println(velocity);
-  }
 }
