@@ -20,7 +20,7 @@ MidiBus midiBus;
 int APCDeviceNumIn = 1;
 int APCDeviceNumOut = 1;
 
-boolean useMidi = true;
+boolean useMidi = false;
 boolean midiDebug = false;
 
 
@@ -525,10 +525,14 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
 
 // wrapper method for sending midi control changes
 void sendCC(int channel, int number, int val) {
+  if (useMidi) {
     midiBus.sendControllerChange(channel, number, val);
+  }
 }
 
 // wrapper method for sending midi notes, because we don't care about most parameters
 void sendNote(int channel, int number, int velocity) {
+  if (useMidi) {
     midiBus.sendNoteOn(channel, number, velocity);
+  }
 }
