@@ -1,5 +1,4 @@
 import processing.opengl.*;
-import java.io.Serializable;
 
 // graphics options
 boolean useOpenGL = false;
@@ -15,13 +14,22 @@ MidiOut[] midiOuts = new MidiOut[nMidiOut];
 
 import themidibus.*;
 
-MidiBus midiBus;
+MidiBus[] midiBusses;
 
+boolean useMidi = true;
+boolean midiDebug = true;
+
+boolean useAPC = true;
 int APCDeviceNumIn = 1;
 int APCDeviceNumOut = 1;
 
-boolean useMidi = false;
-boolean midiDebug = false;
+boolean useiPad = false;
+int iPadDeviceNumIn = 2;
+int iPadDeviceNumOut = 2;
+
+int nMidiDev = 2;
+
+
 
 
 // the beam mixer
@@ -50,7 +58,7 @@ int frameNumber;
 //int y_size = 720;
 
 int x_size = 1280;
-int y_size = 800;
+int y_size = 720;
 
 int x_center, y_center;
 
@@ -107,8 +115,21 @@ void setup() {
   // open midi outputs
   if (useMidi) {
     // print all available midi devices
+    
+    midiBusses = new MidiBus[nMidiDev];
+    
     MidiBus.list();
-    midiBus = new MidiBus(this, APCDeviceNumIn, APCDeviceNumOut);
+    
+    if (useAPC) {
+      println("looking for an APC40 at input " + APCDeviceNumIn + ", output " + APCDeviceNumOut);
+      midiBusses[0] = new MidiBus(this, APCDeviceNumIn, APCDeviceNumOut);
+    }
+    
+    if (useiPad) {
+      println("looking for an iPad at input " + iPadDeviceNumIn + ", output " + iPadDeviceNumOut);
+      midiBusses[1] = new MidiBus(this, iPadDeviceNumIn, iPadDeviceNumOut);
+    }
+    
   }
   
   beamMatrix = new BeamMatrixMinder();
@@ -298,7 +319,7 @@ boolean keepNoteChannelData(int num) {
 
 // method called once the CC and noteOn methods have parsed and formatted data.
 void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, int val) {
-    // ensure we don't retrieve null beams
+    // ensure we don't retrieve null beams, make an exception for master channel
   if (channel < mixer.nLayers() ) {
     
     // if the control is an upfader
@@ -526,13 +547,23 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
 // wrapper method for sending midi control changes
 void sendCC(int channel, int number, int val) {
   if (useMidi) {
-    midiBus.sendControllerChange(channel, number, val);
+    if (useAPC) {
+      midiBusses[0].sendControllerChange(channel, number, val);
+    }
+    if (useiPad) {
+      midiBusses[1].sendControllerChange(channel, number, val);
+    }
   }
 }
 
 // wrapper method for sending midi notes, because we don't care about most parameters
 void sendNote(int channel, int number, int velocity) {
   if (useMidi) {
-    midiBus.sendNoteOn(channel, number, velocity);
+    if (useAPC) {
+      midiBusses[0].sendNoteOn(channel, number, velocity);
+    }
+    if (useiPad) {
+      midiBusses[1].sendNoteOn(channel, number, velocity);
+    }
   }
 }

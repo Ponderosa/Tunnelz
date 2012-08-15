@@ -210,33 +210,6 @@ class Tunnel extends Beam implements Serializable {
     else if (yOffset < -width/2)
       yOffset = width/2;
     
-    color segColor;
-
-    // loop over segments, set fill color
-    for (int segNum = 0; segNum < segs; segNum++) {
-
-      // if no blacking at all, or if this is not a blacked segment
-      if ( (0 == blacking) || !(segNum % blacking == 0) ) {
-        
-        float segAngle = rotInterval*segNum;
-        
-        int theHue = colCenter + (int) (colWidth*sawtoothWave(segAngle*colSpread, 0));
-        
-        // wrap the hue index
-        while (theHue > 255)
-          theHue = theHue - 255;
-        while (theHue < 0)
-          theHue = theHue + 255;
-        
-        segColor = color(theHue, colSat, 255);
-      }
-      // otherwise this is a blacked segment.
-      else {
-        segColor = color(0);
-      }
-      
-      segmentColors[segNum] = segColor;
-    }
   } // end of updateParams()
   
   
@@ -260,55 +233,60 @@ class Tunnel extends Beam implements Serializable {
   // method that draws the beam
   void display(int level, boolean drawAsMask) {
     
+    float rotAdjust = 0;
+    float ellipseAdjust = 0;
+    
+    int thisTarget = 0;
+    
+    // update the state of the animations and get relevant values
+    for (int animIt=0; animIt < nAnim; animIt++) {
+      
+      Animation thisAnim = theAnims[animIt];
+      thisAnim.updateState();
+            
+      thisTarget = thisAnim.target;
+      
+      // what is this animation targeting?
+      switch (thisTarget) {
+        case 1: // rotation speed
+          rotAdjust += thisAnim.getValue(0);
+          break;
+        case 4: // ellipsing
+          ellipseAdjust += thisAnim.getValue(0);
+          break;
+      } // end of target switch
+    }
+    
     // calulcate the rotation
-    currAngle = currAngle + rotSpeed;
+    currAngle = currAngle + rotSpeed + rotAdjust/rotSpeedScale;
     
         
     // unwrap angle so it stays in the range -pi to pi
     currAngle = unwrap(currAngle);
     
-    // update the state of the animations
-    for (int animIt=0; animIt < nAnim; animIt++) {
-      theAnims[animIt].updateState();
-    }
-    
-    float tunnelRadX = (radius*ellipseAspect) - thickness/2;
+    float tunnelRadX = radius*(ellipseAspect + (maxEllipseAspect * ellipseAdjust / 127) ) - thickness/2;
     float tunnelRadY = radius - thickness/2;
 
     noFill();
-    strokeWeight(thickness);
 
     // loop over segments and draw arcs
     for (int i = 0; i < segs; i++) {
-
-      // only draw something if the segment color isn't black.
-      if(color(0) != segmentColors[i]) {
-        
-        // if we're drawing this beam as a mask, make the segment black
-        if (drawAsMask) {
-          stroke(0);
-        }
-        // otherwise pick the color and set the level
-        else {
-          stroke( blendColor(segmentColors[i], color(0,0,level), MULTIPLY) );
-        }
-      }
       
-      else {
-        noStroke();
-      }
-      
-      drawSegmentWithAnimation(tunnelRadX, tunnelRadY, i);
+      drawSegmentWithAnimation(tunnelRadX, tunnelRadY, i, drawAsMask, level);
 
     } // end of loop over segments
   }
   
   // method that actually draws a tunnel segment given animation parameters
-  void drawSegmentWithAnimation(float radX, float radY, int segNum) {
+  void drawSegmentWithAnimation(float radX, float radY, int segNum, boolean drawAsMask, int level) {
       
       // parameters that animation may modify
       float radAdjust = 0;
       float thicknessAdjust = 0;
+      float colCenterAdjust = 0;
+      float colWidthAdjust = 0;
+      float colPeriodAdjust = 0;
+      float colSatAdjust = 0;
       int xAdjust = 0;
       int yAdjust = 0;
       
@@ -327,22 +305,74 @@ class Tunnel extends Beam implements Serializable {
         
         // what is this animation targeting?
         switch (thisTarget) {
-          case 0: // radius
-            radAdjust += thisAnim.getValue(relAngle);
-            break;
-          case 1: // thickness
+          case 2: // thickness
             thicknessAdjust += thisAnim.getValue(relAngle);
             break;
-          case 2: // x offset
+          case 3: // radius
+            radAdjust += thisAnim.getValue(relAngle);
+            break;
+          case 5: // color center
+            colCenterAdjust += thisAnim.getValue(0);
+            break;
+          case 6: // color width
+            colWidthAdjust += thisAnim.getValue(0);
+            break;
+          case 7: // color periodicity
+            colPeriodAdjust += thisAnim.getValue(0) / 16;
+            break;
+          case 8: // saturation
+            colSatAdjust += thisAnim.getValue(relAngle);
+            break;
+          case 11: // x offset
             xAdjust += thisAnim.getValue(0)*(width/2)/127;
             break;
-          case 3: // y offset
+          case 12: // y offset
             yAdjust += thisAnim.getValue(0)*(height/2)/127;
             break;
         } // end of target switch
       } // end of animations loop
 
       strokeWeight( abs(thickness*(1 + thicknessAdjust/127)) );  // the abs() is there to prevent negative width setting when using multiple animations.
+      
+      // now set the color
+      
+      color segColor;
+      
+      // if no blacking at all, or if this is not a blacked segment
+      if ( (0 == blacking) || !(segNum % blacking == 0) ) {
+        
+        
+        float theHue = colCenter + colCenterAdjust + ( (colWidth+colWidthAdjust) * sawtoothWave(relAngle*(colSpread+colPeriodAdjust), 0));
+        
+        // wrap the hue index
+        while (theHue > 255)
+          theHue = theHue - 255;
+        while (theHue < 0)
+          theHue = theHue + 255;
+        
+        segColor = color(theHue, colSat + colSatAdjust, 255);
+      }
+      // otherwise this is a blacked segment.
+      else {
+        segColor = color(0);
+      }
+
+      // only draw something if the segment color isn't black.
+      if(color(0) != segColor) {
+        
+        // if we're drawing this beam as a mask, make the segment black
+        if (drawAsMask) {
+          stroke(0);
+        }
+        // otherwise pick the color and set the level
+        else {
+          stroke( blendColor(segColor, color(0,0,level), MULTIPLY) );
+        }
+      }
+      
+      else {
+        noStroke();
+      }
     
       // draw pie wedge for this cell
       arc(x_center+xOffset+xAdjust, y_center+yOffset+yAdjust, abs(radX+radAdjust), abs(radY+radAdjust),

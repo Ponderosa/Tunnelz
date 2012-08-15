@@ -11,6 +11,22 @@ class Animation implements Serializable {
   float speed;
   int weight;
   int target; // tricky to figure out how we want to do this...
+  /*
+    0 none
+    1 rotation
+    2 thickness
+    3 radius
+    4 ellipse
+    5 color
+    6 spread
+    7 periodicity
+    8 saturation
+    9 segments
+    10 blacking
+    11 x
+    12 y
+    13 x + y
+  */
  
   // internal variables
   float currAngle;
@@ -112,7 +128,7 @@ class Animation implements Serializable {
     else
       active = false;
     
-    target = targetI / 32; // really need to do this mapping in a more explicit way...
+    target = targetI / 8; // really need to do this mapping in a more explicit way...
   }
   
   // method that updates the angle.  call this in the draw loop.
