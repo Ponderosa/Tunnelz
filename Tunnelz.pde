@@ -67,7 +67,6 @@ int maxRadius; // largest radius given screen constraints
 float maxRadiusMultiplier = 2; // optional multiplier to enable larger shapes than screen size;
 float screenAspect;
 float maxEllipseAspect = 2;
-int blackingScale = 10;
 
 int maxSegs = 127;
 
@@ -159,38 +158,6 @@ void setup() {
       thisTunnel.ellipseAspectI = 64;
       
       thisTunnel.blackingI = 20;
-      
-      // radius
-      Animation anim0 = thisTunnel.getAnimation(0);
-      anim0.speedI = 66;
-      anim0.weightI = 40;
-      anim0.typeI = 108;
-      anim0.targetI = 0;
-      anim0.updateParams();
-      
-      // x offset
-      Animation anim1 = thisTunnel.getAnimation(1);
-      anim1.speedI = 70;
-      anim1.weightI = 64;
-      anim1.typeI = 0;
-      anim1.targetI = 64;
-      anim1.updateParams();
-      
-      // thickness
-      Animation anim2 = thisTunnel.getAnimation(2);
-      anim2.speedI = 30;
-      anim2.weightI = 64;
-      anim2.typeI = 24;
-      anim2.targetI = 32;
-      anim2.updateParams();
-      
-      Animation anim3 = thisTunnel.getAnimation(3);
-      anim3.speedI = 68;
-      anim3.weightI = 32;
-      anim3.typeI = 0;
-      anim3.targetI = 96;
-      anim3.updateParams();
-      
       
       thisTunnel.updateParams();
     }

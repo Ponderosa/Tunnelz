@@ -12,6 +12,10 @@ void updateKnobState(int theLayer, Beam theBeam) {
     sendCC(0, knobNums[i], theBeam.getMIDIParam(false, knobNums[i]));
   }
   
+  setAnimTypeLED(theBeam.getCurrentAnimation().typeI);
+  setAnimPeriodsLED(theBeam.getCurrentAnimation().nPeriodsI);
+  setAnimTargetLED(theBeam.getCurrentAnimation().targetI);
+  
 }
 
 // method to set the bottom LED ring values
@@ -38,13 +42,13 @@ void setTopLEDRings(Beam thisBeam) {
   String beamType = thisBeam.type;
   if (beamType.equals("tunnel")) {
   
-    sendCC(0, 0x38, 1);
+    sendCC(0, 0x38, 3);
     sendCC(0, 0x39, 2);
-    sendCC(0, 0x3A, 3);
+    sendCC(0, 0x3A, 1);
     sendCC(0, 0x3B, 1);
     
     sendCC(0, 0x3C, 2);
-    sendCC(0, 0x3D, 1);
+    sendCC(0, 0x3D, 3);
   }
 }
 
@@ -55,6 +59,51 @@ void setAnimSelectLED(int whichAnim) {
   
   for (int i = 0; i < 4; i++) {
     if (whichAnim == i) {
+      sendNote(0, buttonOffset + i, 1);
+    }
+    else {
+      sendNote(0, buttonOffset + i, 0);
+    }
+  }
+  
+}
+
+void setAnimTypeLED(int whichType) {
+   
+  int buttonOffset = 24;
+  
+  for (int i = 0; i < 8; i++) {
+    if (whichType == i + buttonOffset) {
+      sendNote(0, buttonOffset + i, 1);
+    }
+    else {
+      sendNote(0, buttonOffset + i, 0);
+    }
+  }
+  
+}
+
+void setAnimPeriodsLED(int whichType) {
+   
+  int buttonOffset = 0;
+  
+  for (int i = 0; i < 16; i++) {
+    if (whichType == i + buttonOffset) {
+      sendNote(0, buttonOffset + i, 1);
+    }
+    else {
+      sendNote(0, buttonOffset + i, 0);
+    }
+  }
+  
+}
+
+void setAnimTargetLED(int whichType) {
+   
+  int buttonOffset = 36;
+  
+  for (int i = 0; i < 13; i++) {
+    if (whichType == i + buttonOffset) {
       sendNote(0, buttonOffset + i, 1);
     }
     else {

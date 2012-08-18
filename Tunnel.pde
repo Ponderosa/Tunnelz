@@ -21,6 +21,7 @@ class Tunnel extends Beam implements Serializable {
   
   // constants
   int rotSpeedScale = 400;
+  int blackingScale = 4;
   int xNudge = 10;
   int yNudge = 10;
   
@@ -48,7 +49,7 @@ class Tunnel extends Beam implements Serializable {
     colSatI = 0;
     
     segsI = 126;
-    blackingI = 20;
+    blackingI = 64;
 
     currAngle = 0;
     
@@ -198,7 +199,7 @@ class Tunnel extends Beam implements Serializable {
     segs = segsI; // THIS IS A HACK.  This only works because the APC40 doesn't put out 0 for the bottom of the knob.
     rotInterval = TWO_PI / segs;  // ALSO A HACK.
     
-    blacking = blackingI / blackingScale;
+    blacking = (blackingI - 64) / blackingScale;
     
     if (xOffset > width/2)
       xOffset = width/2;
@@ -338,8 +339,18 @@ class Tunnel extends Beam implements Serializable {
       
       color segColor;
       
+      boolean blackMe;
+      
+      boolean blackingMode; // true for standard, false for inverted
+      if (blacking < 0) {
+        blackingMode = false;
+      }
+      else {
+        blackingMode = true;
+      }
+      
       // if no blacking at all, or if this is not a blacked segment
-      if ( (0 == blacking) || !(segNum % blacking == 0) ) {
+      if ( (0 == blacking) || (blackingMode ^ !(segNum % abs(blacking) == 0) ) ) {
         
         
         float theHue = colCenter + colCenterAdjust + ( (colWidth+colWidthAdjust) * sawtoothWave(relAngle*(colSpread+colPeriodAdjust), 0));
@@ -386,7 +397,39 @@ class Tunnel extends Beam implements Serializable {
     Animation thisAnim;
     // define the mapping between APC40 and parameters and set values
     if (isNote) {
+      
+      // ipad animation type select
+      if (num >= 24 && num <= 31) {
+        
+        // haven't implemented these waveforms yet
+        if (num != 28 && num != 29 && num != 30 && num != 31) {
+          thisAnim = getAnimation(currAnim);
+          thisAnim.typeI = num;
+          thisAnim.updateParams();
+        }
+      }
+      
+      // ipad periodicity select
+      else if (num >= 0 && num <= 15) {
+        thisAnim = getAnimation(currAnim);
+        thisAnim.nPeriodsI = num;
+        thisAnim.updateParams();
+      }
+      
+      // ipad target select
+      else if (num >= 36 && num <= 48) {
+        if (num != 48) {
+          thisAnim = getAnimation(currAnim);
+          thisAnim.targetI = num;
+          thisAnim.updateParams();
+        }
+      }
+      
       switch(num) {
+        // animation control buttons, for iPad control
+        
+        
+        
         // aniamtion select buttons:
         case 0x57: //anim 0
           currAnim = 0;
@@ -469,7 +512,7 @@ class Tunnel extends Beam implements Serializable {
         // /* fix this code
         case 48:
           thisAnim = getAnimation(currAnim);
-          thisAnim.typeI = val;
+          thisAnim.speedI = val;
           thisAnim.updateParams();
           break;
         case 49:
@@ -479,12 +522,12 @@ class Tunnel extends Beam implements Serializable {
           break;
         case 50:
           thisAnim = getAnimation(currAnim);
-          thisAnim.speedI = val;
+          thisAnim.dutyCycleI = val;
           thisAnim.updateParams();
           break;
         case 51:
           thisAnim = getAnimation(currAnim);
-          thisAnim.targetI = val;
+          thisAnim.smoothingI = val;
           thisAnim.updateParams();
           break;
         // */
@@ -543,7 +586,7 @@ class Tunnel extends Beam implements Serializable {
         // /* fix this code
         case 48:
           thisAnim = getAnimation(currAnim);
-          theVal = thisAnim.typeI;
+          theVal = thisAnim.speedI;
           break;
         case 49:
           thisAnim = getAnimation(currAnim);
@@ -551,11 +594,11 @@ class Tunnel extends Beam implements Serializable {
           break;
         case 50:
           thisAnim = getAnimation(currAnim);
-          theVal = thisAnim.speedI;
+          theVal = thisAnim.dutyCycleI;
           break;
         case 51:
           thisAnim = getAnimation(currAnim);
-          theVal = thisAnim.targetI;
+          theVal = thisAnim.smoothingI;
           break;
       }
     }

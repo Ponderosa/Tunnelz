@@ -3,13 +3,15 @@ import java.io.Serializable;
 class Animation implements Serializable {
  
   // midi-driven parameters
-  int typeI, speedI, weightI, targetI;
+  int typeI, speedI, weightI, targetI, nPeriodsI, dutyCycleI, smoothingI;
   
   // scaled parameters
   int type; // 0 = sine, 1 = triangle, 2 = square, 3 = sawtooth
   int nPeriods;
   float speed;
   int weight;
+  float dutyCycle;
+  float smoothing;
   int target; // tricky to figure out how we want to do this...
   /*
     0 none
@@ -38,10 +40,13 @@ class Animation implements Serializable {
  
   // default constructor
   Animation() {
-    typeI = 0;
+    typeI = 24;
     speedI = 64;
     weightI = 0;
-    targetI = 0;
+    targetI = 36;
+    nPeriodsI = 0;
+    dutyCycleI = 0;
+    smoothingI = 0;
     
     currAngle = 0;
   
@@ -79,6 +84,9 @@ class Animation implements Serializable {
     speedI = original.speedI;
     weightI = original.weightI;
     targetI = original.targetI;
+    nPeriodsI = original.nPeriodsI;
+    dutyCycleI = original.dutyCycleI;
+    smoothingI = original.smoothingI;
     
     currAngle = original.currAngle;
     
@@ -93,6 +101,8 @@ class Animation implements Serializable {
   // method to update the scaled parameters when midi values change/etc.
   void updateParams() {
    
+    
+    /*
     // sine wave
     if (typeI < 32) {
       type = 0;
@@ -113,6 +123,10 @@ class Animation implements Serializable {
       type = 3;
       nPeriods = (typeI - 96) / 4;
     }
+    */
+    
+    type = typeI - 24;
+    nPeriods = nPeriodsI;
    
     if (65 < speedI)
       speed = -(float)(speedI-65)/speedScale;
@@ -128,7 +142,11 @@ class Animation implements Serializable {
     else
       active = false;
     
-    target = targetI / 8; // really need to do this mapping in a more explicit way...
+    target = targetI - 36 + 1; // really need to do this mapping in a more explicit way...
+    
+    dutyCycle = (float) dutyCycleI / 127;
+    
+    smoothing = (float) (PI/2) * smoothingI / 127;
   }
   
   // method that updates the angle.  call this in the draw loop.
