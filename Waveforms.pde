@@ -9,7 +9,7 @@ float triangleWave(float theAngle) {
     return 2 - 2*theAngle/PI;
   else
     return 2*theAngle/PI;
-}   
+}
 
 // method to generate a square wave with smoothed edges
 float squareWave(float theAngle, float smoothing) {

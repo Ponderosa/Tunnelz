@@ -1,5 +1,4 @@
 // class for dealing with the matrix of buttons used to store beams
-
 class BeamMatrixMinder implements Serializable {
   
   int nRows = 5; // using only clip launch
@@ -139,3 +138,4 @@ class BeamMatrixMinder implements Serializable {
   }
   
 }
+

@@ -1,6 +1,6 @@
-import java.io.Serializable;
 
-class Animation implements Serializable {
+
+class Animation {
  
   // midi-driven parameters
   int typeI, speedI, weightI, targetI, nPeriodsI, dutyCycleI, smoothingI;
@@ -100,30 +100,6 @@ class Animation implements Serializable {
   
   // method to update the scaled parameters when midi values change/etc.
   void updateParams() {
-   
-    
-    /*
-    // sine wave
-    if (typeI < 32) {
-      type = 0;
-      nPeriods = typeI / 4;
-    }
-    // triangle wave
-    else if (typeI < 64) {
-      type = 1;
-      nPeriods = (typeI - 32) / 4; 
-    }
-    // square wave
-    else if (typeI < 96) {
-      type = 2;
-      nPeriods = (typeI - 64) / 4;
-    }
-    // sawtooth wave
-    else {
-      type = 3;
-      nPeriods = (typeI - 96) / 4;
-    }
-    */
     
     type = typeI - 24;
     nPeriods = nPeriodsI;
@@ -142,7 +118,7 @@ class Animation implements Serializable {
     else
       active = false;
     
-    target = targetI - 36 + 1; // really need to do this mapping in a more explicit way...
+    target = targetI - 35 + 1; // really need to do this mapping in a more explicit way...
     
     dutyCycle = (float) dutyCycleI / 127;
     

@@ -3,15 +3,6 @@ import processing.opengl.*;
 // graphics options
 boolean useOpenGL = false;
 
-// midi stuff
-/*
-import promidi.*;
-
-MidiIO midiIO;
-int nMidiOut = 9;
-MidiOut[] midiOuts = new MidiOut[nMidiOut];
-*/
-
 import themidibus.*;
 
 MidiBus[] midiBusses;
@@ -108,8 +99,8 @@ void setup() {
   x_center = width/2;
   y_center = height/2;
   
-  
-
+  // turn that annoying extra beam off
+  noCursor();
   
   // open midi outputs
   if (useMidi) {
@@ -168,8 +159,8 @@ void setup() {
     midiInputHandler(0, true, true, 0x33, 127);
   }
   
-  //save test
-  //saveState(filePrefix,true);
+  // save a copy of the default tunnel
+  beamMatrix.putBeam(4, 7, new Tunnel() );
   
 }
 
@@ -182,16 +173,6 @@ void draw() {
   background(0);
   
   mixer.drawLayers();
-  
-  /*
-  // deep copy testing
-  if (frameNumber % 1 == 0) {
-    Tunnel toCopy = (Tunnel) theBeams.get(0);
-    Tunnel theCopy = toCopy.copy();
-    theBeams.set(0, theCopy);
-  }
-  */
-  
   
   if (frameNumber % 240 == 0) {
     println(frameRate);
@@ -342,13 +323,13 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
       // beam save mode toggle
       else if (isNote && 0x52 == num) {
         
-          // turn off look save mode
-          beamMatrix.waitingForLookSave = false;
-          setLookSaveLED(0);
-          
-          // turn off delete mode
-          beamMatrix.waitingForDelete = false;
-          setDeleteLED(0);
+        // turn off look save mode
+        beamMatrix.waitingForLookSave = false;
+        setLookSaveLED(0);
+        
+        // turn off delete mode
+        beamMatrix.waitingForDelete = false;
+        setDeleteLED(0);
         
         // if we were already waiting for a beam save
         if (beamMatrix.waitingForBeamSave) {
@@ -374,13 +355,13 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
       // look save mode toggle
       else if (isNote && 0x53 == num) {
         
-          // turn off beam save mode
-          beamMatrix.waitingForBeamSave = false;
-          setBeamSaveLED(0);
-          
-          // turn off delete mode
-          beamMatrix.waitingForDelete = false;
-          setDeleteLED(0);
+        // turn off beam save mode
+        beamMatrix.waitingForBeamSave = false;
+        setBeamSaveLED(0);
+        
+        // turn off delete mode
+        beamMatrix.waitingForDelete = false;
+        setDeleteLED(0);
         
         // if we were already waiting for a look save
         if (beamMatrix.waitingForLookSave) {
@@ -455,8 +436,11 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
           
             BeamVault theSavedThing = beamMatrix.getElement(row, channel);
           
+            boolean isLook = beamMatrix.elementIsLook(row, channel);
+            
+            boolean lookEdit = false;
           
-            if ( beamMatrix.elementIsLook(row, channel) ) {
+            if ( isLook &&  lookEdit ) {
               mixer.setLook(theSavedThing);
               println("setting a look.");
             }
@@ -468,25 +452,18 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
             Beam currentBeam = mixer.getCurrentBeam();
             updateKnobState( mixer.currentLayer, currentBeam );
             setAnimSelectLED( currentBeam.currAnim );
+            
+            if (isLook && !lookEdit) {
+              setIsLookLED(channel, true);
+            }
+            else {
+              setIsLookLED(channel, false);
+            }
           }
           
         }
         
       }
-      
-      // save state to file
-      else if (isNote && 0x51 == num) {
-        /*
-        // call the file saving method with auto moment naming
-        try {
-          saveState(filePrefix, true);
-        }
-        catch (Exception e) {
-          println("could not save properly!"); 
-        }
-        */
-      }
-      
       
       // if beam-specific parameter:
       else {
@@ -503,7 +480,6 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
     
         // call the update method
         thisBeam.updateParams();
-        
         updateKnobState(mixer.currentLayer, thisBeam);
       }
     } 
@@ -534,3 +510,4 @@ void sendNote(int channel, int number, int velocity) {
     }
   }
 }
+

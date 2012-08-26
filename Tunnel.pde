@@ -1,6 +1,6 @@
 
 // class for making ellipsoidal tunnels a la the prototype
-class Tunnel extends Beam implements Serializable {
+class Tunnel extends Beam {
   
   // integer-valued parameters, derived from midi inputs and used to initialize the beam
   int rotSpeedI, thicknessI, radiusI, ellipseAspectI;
@@ -46,10 +46,10 @@ class Tunnel extends Beam implements Serializable {
     colCenterI = 0;
     colWidthI = 0;
     colSpreadI = 0;
-    colSatI = 0;
+    colSatI = 127;
     
     segsI = 126;
-    blackingI = 64;
+    blackingI = 72;
 
     currAngle = 0;
     

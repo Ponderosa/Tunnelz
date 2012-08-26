@@ -32,6 +32,7 @@ class BeamVault implements Serializable {
     theBeams = copyArrayListOfBeams(theBeamArray);
   }
   
+  // this constructor should copy?  not convinced I wrote this correctly, don't use me.
   BeamVault(Beam[] theBeamArray) {
     theBeams = new ArrayList(Arrays.asList(theBeamArray));
   }

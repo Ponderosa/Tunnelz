@@ -1,6 +1,6 @@
 
 // class that holds a collection of beams in layers, and understands how they are mixed.
-class Mixer implements Serializable {
+class Mixer {
   
   private int nLayers;
   private Beam[] theLayers;
@@ -103,18 +103,22 @@ class Mixer implements Serializable {
   
   // method to copy the entire current look
   BeamVault getCopyOfCurrentLook() {
-    return new BeamVault( theLayers ); 
+    
+    // convert the current look into a Look and stuff it into a BeamVault
+    return new BeamVault( new Look(theLayers, levels, mask) );
   }
   
   // method to copy a look into the mixer
   void setLook(BeamVault newLook) {
     
-    int numElemNew = newLook.size();
+    Look theLook = (Look) newLook.retrieveCopy(0);
+    
+    int nBeamsInLook = theLook.theLayers.length;
     
     for (int i=0; i<nLayers; i++) {
       
-      if (i < numElemNew) {
-        theLayers[i] = newLook.retrieveCopy(i);
+      if (i < nBeamsInLook) {
+        theLayers[i] = theLook.theLayers[i];
       }
       
       else {
@@ -126,3 +130,4 @@ class Mixer implements Serializable {
   
   
 } // end of Mixer class
+

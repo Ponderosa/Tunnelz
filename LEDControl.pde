@@ -1,3 +1,4 @@
+
 // helper functions for controlling APC LEDs
 
 // method to update the state of the control knobs when we change channels
@@ -12,9 +13,22 @@ void updateKnobState(int theLayer, Beam theBeam) {
     sendCC(0, knobNums[i], theBeam.getMIDIParam(false, knobNums[i]));
   }
   
-  setAnimTypeLED(theBeam.getCurrentAnimation().typeI);
-  setAnimPeriodsLED(theBeam.getCurrentAnimation().nPeriodsI);
-  setAnimTargetLED(theBeam.getCurrentAnimation().targetI);
+
+  
+  println("set anim LEDs");
+  
+  if (theBeam.type.equals("look")) {
+    setIsLookLED(theLayer, true);
+    setAnimTypeLED(-1);
+    setAnimPeriodsLED(-1);
+    setAnimTargetLED(-1);
+  }
+  else {
+    setIsLookLED(theLayer, false);
+    setAnimTypeLED(theBeam.getCurrentAnimation().typeI);
+    setAnimPeriodsLED(theBeam.getCurrentAnimation().nPeriodsI);
+    setAnimTargetLED(theBeam.getCurrentAnimation().targetI);
+  }
   
 }
 
@@ -34,6 +48,17 @@ void setBottomLEDRings(int channel, Beam thisBeam) {
     sendCC(channel, 0x1E, 2);
     sendCC(channel, 0x1F, 1);
   }
+  else if (beamType.equals("look")) {
+    sendCC(channel, 0x18, 0);
+    sendCC(channel, 0x19, 0);
+    sendCC(channel, 0x1A, 0);
+    sendCC(channel, 0x1B, 0);
+  
+    sendCC(channel, 0x1C, 0);
+    sendCC(channel, 0x1D, 0);
+    sendCC(channel, 0x1E, 0);
+    sendCC(channel, 0x1F, 0);
+  }
 }
 
 // set the top LED ring values
@@ -49,6 +74,19 @@ void setTopLEDRings(Beam thisBeam) {
     
     sendCC(0, 0x3C, 2);
     sendCC(0, 0x3D, 3);
+    sendCC(0, 0x3E, 0);
+    sendCC(0, 0x3F, 0);
+  }
+  else if (beamType.equals("look")) {
+    sendCC(0, 0x38, 0);
+    sendCC(0, 0x39, 0);
+    sendCC(0, 0x3A, 0);
+    sendCC(0, 0x3B, 0);
+    
+    sendCC(0, 0x3C, 0);
+    sendCC(0, 0x3D, 0);
+    sendCC(0, 0x3E, 0);
+    sendCC(0, 0x3F, 0);
   }
 }
 
@@ -100,7 +138,7 @@ void setAnimPeriodsLED(int whichType) {
 
 void setAnimTargetLED(int whichType) {
    
-  int buttonOffset = 36;
+  int buttonOffset = 35;
   
   for (int i = 0; i < 13; i++) {
     if (whichType == i + buttonOffset) {
@@ -190,5 +228,15 @@ void setMaskButtonLED(int channel, boolean state) {
   else {
     sendNote(channel, 0x31, 0);
   }
+}
+
+void setIsLookLED(int channel, boolean state) {
+  if (state) {
+    sendNote(channel, 0x30, 1);
+  }
+  else {
+    sendNote(channel, 0x30, 0);
+  }
+  
 }
 
