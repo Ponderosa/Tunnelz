@@ -194,6 +194,10 @@ void setDeleteLED(int state) {
   setSceneLaunchLED(2, state);
 }
 
+void setLookEditLED(int state) {
+  setSceneLaunchLED(4, state);
+}
+
 void setTrackSelectLED(int channel, int state) {
   sendNote(channel, 0x33, state);
 }

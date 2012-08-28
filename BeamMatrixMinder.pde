@@ -11,6 +11,7 @@ class BeamMatrixMinder implements Serializable {
   boolean waitingForBeamSave;
   boolean waitingForLookSave;
   boolean waitingForDelete;
+  boolean waitingForLookEdit;
   
   // probably only have one constructor
   BeamMatrixMinder() {
@@ -38,6 +39,8 @@ class BeamMatrixMinder implements Serializable {
     setLookSaveLED(0);
     waitingForDelete = false;
     setDeleteLED(0);
+    waitingForLookEdit = false;
+    setLookEditLED(0);
     
   }
   

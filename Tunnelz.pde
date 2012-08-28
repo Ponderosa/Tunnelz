@@ -331,6 +331,10 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
         beamMatrix.waitingForDelete = false;
         setDeleteLED(0);
         
+        // turn off look edit mode
+        beamMatrix.waitingForLookEdit = false;
+        setLookEditLED(0);
+        
         // if we were already waiting for a beam save
         if (beamMatrix.waitingForBeamSave) {
           
@@ -363,6 +367,10 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
         beamMatrix.waitingForDelete = false;
         setDeleteLED(0);
         
+        // turn off look edit mode
+        beamMatrix.waitingForLookEdit = false;
+        setLookEditLED(0);
+        
         // if we were already waiting for a look save
         if (beamMatrix.waitingForLookSave) {
           
@@ -388,8 +396,13 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
         // these buttons are radio
         beamMatrix.waitingForBeamSave = false;
         setBeamSaveLED(0);
+        
         beamMatrix.waitingForLookSave = false;
         setLookSaveLED(0);
+        
+        // turn off look edit mode
+        beamMatrix.waitingForLookEdit = false;
+        setLookEditLED(0);
         
         if (beamMatrix.waitingForDelete) {
           beamMatrix.waitingForDelete = false;
@@ -402,6 +415,33 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
           setDeleteLED(2);
         }
       } // end delete element mode toggle
+      
+      // load look to edit mode toggle
+      else if (isNote && 0x56 == num) {
+        
+        // these buttons are radio
+        beamMatrix.waitingForBeamSave = false;
+        setBeamSaveLED(0);
+        
+        beamMatrix.waitingForLookSave = false;
+        setLookSaveLED(0);
+        
+        // turn off delete mode
+        beamMatrix.waitingForDelete = false;
+        setDeleteLED(0);
+        
+        // we're deactivating look edit
+        if (beamMatrix.waitingForLookEdit) {
+          beamMatrix.waitingForLookEdit = false;
+          setLookEditLED(0);
+        }
+
+        // we're activating look edit mode
+        else {
+          beamMatrix.waitingForLookEdit = true;
+          setLookEditLED(2);
+        }
+      } // end look edit mode toggle
       
       // if we just pushed a beam save matrix button
       else if ( isNote && (num >= 0x35) && (num <= 0x39) && (channel < 8) ) {
@@ -437,10 +477,8 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
             BeamVault theSavedThing = beamMatrix.getElement(row, channel);
           
             boolean isLook = beamMatrix.elementIsLook(row, channel);
-            
-            boolean lookEdit = false;
           
-            if ( isLook &&  lookEdit ) {
+            if ( isLook &&  beamMatrix.waitingForLookEdit ) {
               mixer.setLook(theSavedThing);
               println("setting a look.");
             }
@@ -453,7 +491,7 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
             updateKnobState( mixer.currentLayer, currentBeam );
             setAnimSelectLED( currentBeam.currAnim );
             
-            if (isLook && !lookEdit) {
+            if (isLook && !beamMatrix.waitingForLookEdit) {
               setIsLookLED(channel, true);
             }
             else {
