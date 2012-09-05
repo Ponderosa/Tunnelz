@@ -420,7 +420,7 @@ class Tunnel extends Beam {
       
       // ipad target select
       else if (num >= 35 && num <= 47) {
-        if (num != 47) {
+        if (num != 47 && num != 44 && num != 43) {
           thisAnim = getAnimation(currAnim);
           thisAnim.targetI = num;
           thisAnim.updateParams();
