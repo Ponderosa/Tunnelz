@@ -1,7 +1,7 @@
 import processing.opengl.*;
 
 // graphics options
-boolean useOpenGL = false;
+boolean useOpenGL = false; 
 
 import themidibus.*;
 
@@ -11,10 +11,10 @@ boolean useMidi = true;
 boolean midiDebug = true;
 
 boolean useAPC = true;
-int APCDeviceNumIn = 1;
-int APCDeviceNumOut = 1;
+int APCDeviceNumIn = 3;
+int APCDeviceNumOut = 3;
 
-boolean useiPad = false;
+boolean useiPad = true;
 int iPadDeviceNumIn = 2;
 int iPadDeviceNumOut = 2;
 
@@ -175,7 +175,7 @@ void draw() {
   mixer.drawLayers();
   
   if (frameNumber % 240 == 0) {
-    println(frameRate);
+    //println(frameRate);
   }
   
   frameNumber++;
@@ -492,11 +492,14 @@ void midiInputHandler(int channel, boolean chanChange, boolean isNote, int num, 
             setAnimSelectLED( currentBeam.currAnim );
             
             if (isLook && !beamMatrix.waitingForLookEdit) {
-              setIsLookLED(channel, true);
+              setIsLookLED(mixer.currentLayer, true);
             }
             else {
-              setIsLookLED(channel, false);
+              setIsLookLED(mixer.currentLayer, false);
             }
+            
+            beamMatrix.waitingForLookEdit = false;
+            setLookEditLED(0);
           }
           
         }

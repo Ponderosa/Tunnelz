@@ -201,6 +201,8 @@ class Tunnel extends Beam {
     
     blacking = (blackingI - 64) / blackingScale;
     
+    println("blacking is " + blacking);
+    
     if (xOffset > width/2)
       xOffset = width/2;
     else if (xOffset < -width/2)
@@ -349,8 +351,8 @@ class Tunnel extends Beam {
         blackingMode = true;
       }
       
-      // if no blacking at all, or if this is not a blacked segment
-      if ( (0 == blacking) || (blackingMode ^ !(segNum % abs(blacking) == 0) ) ) {
+      // if no blacking at all or if this is not a blacked segment; the -1 is a hack to remove the "all segments blacked" bug
+      if ( (0 == blacking) || (-1 == blacking) ||  (blackingMode ^ !(segNum % abs(blacking) == 0) ) ) {
         
         
         float theHue = colCenter + colCenterAdjust + ( (colWidth+colWidthAdjust) * sawtoothWave(relAngle*(colSpread+colPeriodAdjust), 0));
@@ -417,8 +419,8 @@ class Tunnel extends Beam {
       }
       
       // ipad target select
-      else if (num >= 36 && num <= 48) {
-        if (num != 48) {
+      else if (num >= 35 && num <= 47) {
+        if (num != 47) {
           thisAnim = getAnimation(currAnim);
           thisAnim.targetI = num;
           thisAnim.updateParams();

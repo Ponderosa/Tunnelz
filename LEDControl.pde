@@ -137,12 +137,15 @@ void setAnimPeriodsLED(int whichType) {
 }
 
 void setAnimTargetLED(int whichType) {
-   
+  
   int buttonOffset = 35;
+  
+  println("setting anim LED " + whichType);
   
   for (int i = 0; i < 13; i++) {
     if (whichType == i + buttonOffset) {
       sendNote(0, buttonOffset + i, 1);
+      println("setting the LED!");
     }
     else {
       sendNote(0, buttonOffset + i, 0);

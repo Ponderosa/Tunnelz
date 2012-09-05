@@ -61,7 +61,6 @@ class Look extends Beam {
       
         // scale the draw level based on the input to this method
         scaledLevel = (level * levels[i]) / 255;
-        println("scaled level " +  scaledLevel);
         drawMe = theLayers[i];
         
         

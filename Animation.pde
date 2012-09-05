@@ -46,7 +46,7 @@ class Animation {
     targetI = 36;
     nPeriodsI = 0;
     dutyCycleI = 0;
-    smoothingI = 0;
+    smoothingI = 32;
     
     currAngle = 0;
   
@@ -150,11 +150,11 @@ class Animation {
           
         // square wave
         case 2:
-          return (float) weight * squareWave(angleOffset * nPeriods + currAngle, waveSmoothing);
+          return (float) weight * squareWave(angleOffset * nPeriods + currAngle, smoothing);
           
         // sawtooth wave
         case 3:
-          return (float) weight * sawtoothWave(angleOffset * nPeriods + currAngle, waveSmoothing);
+          return (float) weight * sawtoothWave(angleOffset * nPeriods + currAngle, smoothing);
           
       } // end of switch
       
