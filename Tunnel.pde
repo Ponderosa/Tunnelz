@@ -23,22 +23,9 @@ class Tunnel extends Beam {
   int rotSpeedScale = 400;
   int blackingScale = 4;
   
-  float thicknessScale;
-  
   // resolution-dependent parameters:
   int xNudge, yNudge;
   float thicknessScale;
-  
-  if (is1080) {
-    xNudge = 15;
-    yNudge = 15;
-    thickessScale = 4.05;
-  }
-  else {
-    xNudge = 10;
-    yNudge = 10;
-    thicknessScale = 2.7;
-  }
   
   // array of colors for current parameters
   color[] segmentColors;
@@ -71,6 +58,8 @@ class Tunnel extends Beam {
     xOffset = 0;
     yOffset = 0;
     
+    setupPixelParams();
+    
     for (int i=0; i < nAnim; i++) {
       theAnims[i] = new Animation();
     }
@@ -86,6 +75,9 @@ class Tunnel extends Beam {
   
   // tunnel constructor for a tunnel loaded from file
   Tunnel(String[] params) {
+    
+    setupPixelParams();
+    
     type = params[0];
     rotSpeedI = int(params[1]);
     thicknessI = int(params[2]);
@@ -116,6 +108,8 @@ class Tunnel extends Beam {
          int theXOffset, int theYOffset) {
            
     type = "tunnel";
+    
+    setupPixelParams();
     
     
     rotSpeedI = theRotSpeedI;
@@ -149,6 +143,8 @@ class Tunnel extends Beam {
   // deep copy constructor
   protected Tunnel(Tunnel original) {
     super(original);
+    
+    setupPixelParams();
     
     type = "tunnel";
     
@@ -646,6 +642,19 @@ class Tunnel extends Beam {
            theAnims[1].toString() + "\t" +
            theAnims[2].toString() + "\t" +
            theAnims[3].toString();
+  }
+  
+  void setupPixelParams() {
+    if (is1080) {
+      xNudge = 15;
+      yNudge = 15;
+      thicknessScale = 4.05;
+    }
+    else {
+      xNudge = 10;
+      yNudge = 10;
+      thicknessScale = 2.7;
+    }
   }
   
 } // end of Tunnel class
