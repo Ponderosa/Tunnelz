@@ -22,8 +22,23 @@ class Tunnel extends Beam {
   // constants
   int rotSpeedScale = 400;
   int blackingScale = 4;
-  int xNudge = 10;
-  int yNudge = 10;
+  
+  float thicknessScale;
+  
+  // resolution-dependent parameters:
+  int xNudge, yNudge;
+  float thicknessScale;
+  
+  if (is1080) {
+    xNudge = 15;
+    yNudge = 15;
+    thickessScale = 4.05;
+  }
+  else {
+    xNudge = 10;
+    yNudge = 10;
+    thicknessScale = 2.7;
+  }
   
   // array of colors for current parameters
   color[] segmentColors;
@@ -186,8 +201,10 @@ class Tunnel extends Beam {
       rotSpeed = -(float)(-rotSpeedI+63)/rotSpeedScale;
     else
       rotSpeed = 0;
+    
+    
+    thickness = (float)thicknessI*thicknessScale;
       
-    thickness = (float)thicknessI*2.7;
     radius = (int) maxRadiusMultiplier * maxRadius * radiusI / 127;
     ellipseAspect = maxEllipseAspect * ellipseAspectI / 127;
     

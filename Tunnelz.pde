@@ -51,6 +51,9 @@ int frameNumber;
 int x_size = 1280;
 int y_size = 720;
 
+
+boolean is1080 = true;
+
 int x_center, y_center;
 
 // various constraints and multipliers
